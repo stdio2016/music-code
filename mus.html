@@ -4,10 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Music code player</title>
+<script src='js/sound.js'></script>
+<script src='js/player.js'></script>
 <script src='js/parser.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 </head>
 <body>
+<h1>Music Code Player</h1>
 <p>Select a song: <select id="song" onchange="changeSong()">
   <optgroup label="Builtin">
     <option value="bTwinkle">Twinkle Twinkle Little Star</option>
@@ -89,6 +92,7 @@ function togglePlayPause(){
   else {
     codeOut.innerHTML = "嗡嗡嗡 嗡嗡嗡 大家一起來做工";
     btnPlayPause.value = "Pause";
+    play();
     isPlaying = true;
   }
 }
