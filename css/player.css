@@ -1,0 +1,4 @@
+/* firefox on Ubuntu bug */
+input[type="range"] {
+  background: none;
+}

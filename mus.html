@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Music code player</title>
+<script src='js/parser.js'></script>
+<link rel='stylesheet' href='css/player.css'>
+</head>
+<body>
+<p>Select a song: <select id="song" onchange="changeSong()">
+  <optgroup label="Builtin">
+    <option value="bTwinkle">Twinkle Twinkle Little Star</option>
+    <option value="bYee">Yee</option>
+    <option value="bLittleBee">Little Bee</option>
+  </optgroup>
+  <optgroup label='custom'>
+    <option value="new">New...</option>
+  </optgroup>
+</select></p>
+<div id='divEditMode'>
+  <p>Music format:
+    <select id="format">
+      <option value="mml">Music Macro Language</option>
+      <option value="mascii">Mascii</option>
+    </select>
+  </p>
+  <textarea style="width: 15em; height: 15em;"></textarea>
+  <p>
+    <input type='button' value='Play' onclick='gotoMode("play")'>
+    <input type='button' value='Save' onclick='save()'>
+    <input type='button' value='Delete' onclick='del()'>
+    <a href='help.html'>Help!</a>
+  </p>
+</div>
+<div id='divPlayMode' style='display:none;'>
+  <p>
+    <input type='button' value='Edit' onclick='gotoMode("edit")'>
+    <input type='button' value='Save' onclick='save()'>
+    <input type='button' value='Delete' onclick='del()'>
+    <a href='help.html'>Help!</a>
+  </p>
+  <p>
+    <input type='button' id='btnPlayPause' value='Play' onclick='togglePlayPause()'>
+    <input type='button' value='Stop' onclick='stop()'>
+    <label><input type='checkbox' id='chkLoopMusic'>Loop Music</label>
+  </p>
+  <p>
+    <input type='range' min='0' max='1' value='0' step='0.1' oninput='console.log("changing")' onmouseup='console.log(this.value)'><span>0:00/0:00</span>
+  </p>
+  <p>Music format: None</p>
+  <p>
+    Code:
+    <input type='button' id='btnToggleCode' value='Hide' onclick='toggleCode()'>
+    <pre id='codeOut'>code
+code</pre>
+  </p>
+</div>
+<script>
+function gotoMode(mode){
+  divPlayMode.style.display = "none";
+  divEditMode.style.display = "none";
+  if(mode == "play"){
+    divPlayMode.style.display = "";
+    togglePlayPause();
+  }
+  if(mode == "edit"){
+    divEditMode.style.display = "";
+  }
+}
+
+function toggleCode(){
+  if(codeOut.style.display == 'none') {
+    codeOut.style.display = '';
+    btnToggleCode.value = "Hide";
+  }
+  else {
+    codeOut.style.display = 'none';
+    btnToggleCode.value = "Show";
+  }
+}
+var isPlaying = false;
+function togglePlayPause(){
+  if (isPlaying) {
+    codeOut.innerHTML = "";
+    btnPlayPause.value = "Play";
+    isPlaying = false;
+  }
+  else {
+    codeOut.innerHTML = "嗡嗡嗡 嗡嗡嗡 大家一起來做工";
+    btnPlayPause.value = "Pause";
+    isPlaying = true;
+  }
+}
+</script>
+</body>
+</html>
