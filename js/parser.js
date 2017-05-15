@@ -195,7 +195,11 @@ MMLReader.prototype.readN = function () {
 
 // read key change
 MMLReader.prototype.readKey = function () {
-  var key = this.nextChar();
+  var key = this.nextChar().toUpperCase();
+  if (key === null || key > "G" || key < "A") {
+    this.rewind();
+    key = null;
+  }
   var accid = this.readAccidental(false);
   return {type: 'key', key: key, alter: accid};
 };
