@@ -6,6 +6,7 @@ function MMLReader(code) {
   this.data = code;
   this.pos = 0;
   this.lastPos = 0;
+  this.startPos = 0;
 };
 
 // get next non-whitespace character
@@ -81,16 +82,18 @@ MMLReader.prototype.next = function () {
     case 'C': case 'D': case 'E': case 'F': case 'G':
     case 'A': case 'B': // /[A-G][+#-@]*\d*\.?~?
       return this.readNote(ch.toUpperCase());
-    case 'K': // /K[A-G]?[+#-]*
-      return this.readKey();
     case ',': case '<':
       return {type: 'octaveChange', octave: -1};
     case "'": case '>':
       return {type: 'octaveChange', octave: +1};
-    case 'O': // /O\d/
+    case 'O': // /O\d//
       num = this.nextChar();
-      if (num === "" || num > "9" || num < "0") num = 4;
-      return {type: 'octave', octave: num};
+      if (num === null) num = 4;
+      if (num > "9" || num < "0") {
+        this.rewind();
+        num = 4;
+      }
+      return {type: 'octave', octave: +num};
     case 'L': // /L\d*\.?/
       num = this.nextInt();
       if (num === null || num < 1) num = 4;
@@ -104,11 +107,15 @@ MMLReader.prototype.next = function () {
     case 'T': // /T\d*(\.\d*)?/
       num = this.nextFloat();
       if (num === null || num < 20) num = 120;
+      if (num > 1000) num = 1000;
       return {type: 'tempo', bpm: num};
     case 'N': // /N\d*\.?~?/
       return this.readN();
     case '&':
       return {type: 'tie'};
+  // my extension
+    case 'K': // /K[A-G]?[+#-]*
+      return this.readKey();
     case '!': // /!\d*/
       num = this.nextInt();
       if (num === null) num = 0;
@@ -135,11 +142,11 @@ MMLReader.prototype.readAccidental = function (allowNatural) {
       accid = 0;
     }
     else {
+      this.rewind();
       break;
     }
-    has = true;
+    hasAccid = true;
   }
-  this.rewind();
   if (hasAccid) {
     return accid;
   }
@@ -168,5 +175,27 @@ MMLReader.prototype.readNote = function (pitch) {
     this.rewind();
   }
   return {type: 'note', pitch: pitch, alter: accid, duration: len,
-    dots: dots, tied: tied};
+    dots: dots, tied: tied, pos: [this.startPos, this.pos]};
+};
+
+// read rest
+MMLReader.prototype.readRest = function () {
+  var len = this.nextInt();
+  var dots = this.readDot();
+  return {type: 'rest', duration: len, dots: dots, pos: [this.startPos, this.pos]};
+};
+
+// read note in MIDI pitch format
+MMLReader.prototype.readN = function () {
+  var pitch = this.nextInt();
+  if (pitch === null) pitch = 60;
+  var dots = this.readDot();
+  return {type: 'noteN', pitch: pitch, dots: dots, pos: [this.startPos, this.pos]};
+};
+
+// read key change
+MMLReader.prototype.readKey = function () {
+  var key = this.nextChar();
+  var accid = this.readAccidental(false);
+  return {type: 'key', key: key, alter: accid};
 };
