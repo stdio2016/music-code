@@ -2,3 +2,27 @@
 input[type="range"] {
   background: none;
 }
+
+span.normal {
+  color: black;
+}
+
+span.comment {
+  color: gray;
+  font-style: italic;
+}
+
+span.syntax-error {
+  color: white;
+  background-color: red;
+}
+
+span.octave {
+  color: mediumseagreen;
+  font-weight: bolder;
+}
+
+span.instruction{
+  color: magenta;
+  font-weight: bold;
+}

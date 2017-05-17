@@ -83,7 +83,7 @@ MMLAssembler.prototype.musicToNotes = function () {
   var pos = 0;
   while (!this.reader.atEnd()) {
     var instr = this.reader.next();
-    var bad = false;
+    var cls = "normal";
     switch (instr && instr.type) {
       case "note":
         break;
@@ -91,25 +91,48 @@ MMLAssembler.prototype.musicToNotes = function () {
         break;
       case "rest":
         break;
+      case "tie":
+        break;
       case "octave":
         this.setOctave(instr.octave);
+        cls = "octave";
         break;
       case "octaveChange":
         this.setOctave(this.currentPart.octave + instr.octave);
+        cls = "octave";
         break;
       case "tempo":
+        cls = "instruction";
         break;
       case "duration":
+        cls = "instruction";
         break;
-      default: bad = true;
+      case "volume":
+        cls = "instruction";
+        break;
+      case "musicFeel":
+        cls = "instruction";
+        break;
+      case "part":
+        cls = "instruction";
+        break;
+      case "chord":
+        cls = "instruction";
+        break;
+      case "key":
+        cls = "instruction";
+        break;
+      default: cls = "syntax-error";
     }
     // TODO: better HTML output
     var startPos = this.reader.startPos;
-    var spaces = safeInnerHTML(this.reader.data.substr(pos, startPos - pos));
-    var text = safeInnerHTML(this.reader.data.substr(startPos, this.reader.pos - startPos));
+    var spaces = this.reader.data.substr(pos, startPos - pos);
+    // NOTE: instruction text can have comments in it
+    var text = this.reader.data.substr(startPos, this.reader.pos - startPos);
     pos = this.reader.pos;
-    this.outputHTML.push("<span class='comment'>" + spaces + "</span>");
-    this.outputHTML.push("<span class='normal'>" + text + "</span>");
+    if (spaces.length > 0)
+      this.outputHTML.push("<span class='comment'>" + safeInnerHTML(spaces) + "</span>");
+    this.outputHTML.push("<span class='" + cls + "'>" + safeInnerHTML(text) + "</span>");
   }
   codeOut.innerHTML = this.outputHTML.join("");
 };

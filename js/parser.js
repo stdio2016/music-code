@@ -75,8 +75,8 @@ MMLReader.prototype.nextFloat = function () {
 
 // get next instruction from MML code
 MMLReader.prototype.next = function () {
-  this.startPos = this.pos;
   var ch = this.nextChar();
+  this.startPos = this.pos - 1;
   var num;
   switch(ch.toUpperCase()){
     case 'C': case 'D': case 'E': case 'F': case 'G':
