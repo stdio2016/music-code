@@ -7,6 +7,7 @@
 <script src='js/sound.js'></script>
 <script src='js/player.js'></script>
 <script src='js/parser.js'></script>
+<script src='js/assembler.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 </head>
 <body>
@@ -28,7 +29,7 @@
       <option value="mascii">Mascii</option>
     </select>
   </p>
-  <textarea style="width: 15em; height: 15em;"></textarea>
+  <textarea id="codeIn" style="width: 15em; height: 15em;"></textarea>
   <p>
     <input type='button' value='Play' onclick='gotoMode("play")'>
     <input type='button' value='Save' onclick='save()'>
@@ -65,6 +66,7 @@ function gotoMode(mode){
   divEditMode.style.display = "none";
   if(mode == "play"){
     divPlayMode.style.display = "";
+    MMLAssembler(codeIn.value).musicToNotes();
     togglePlayPause();
   }
   if(mode == "edit"){
@@ -90,7 +92,6 @@ function togglePlayPause(){
     isPlaying = false;
   }
   else {
-    codeOut.innerHTML = "嗡嗡嗡 嗡嗡嗡 大家一起來做工";
     btnPlayPause.value = "Pause";
     play();
     isPlaying = true;
