@@ -19,10 +19,8 @@ span.syntax-error {
 
 span.octave {
   color: mediumseagreen;
-  font-weight: bolder;
 }
 
 span.instruction{
   color: magenta;
-  font-weight: bold;
 }

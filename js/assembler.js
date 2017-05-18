@@ -19,6 +19,7 @@ function MMLNote(pitch, duration) {
   this.source = []; // <span> elements that contains the music code
   this.chord = false; // this note is part of a chord
   this.duration = duration;
+  this.dots = 0; // dot count, can be either 0 or 1
   this.feel = 7/8; // how much to truncate this note, can be 3/4, 7/8 or 1
 }
 
@@ -31,7 +32,7 @@ MMLNote.prototype.toString = function () {
     if (octave < 0) octave = "0<";
     var noteName = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][this.pitch % 12];
     return "[MMLNote " + (this.chord ? "/" : "") +
-      "O" + octave + " " + noteName + (this.duration || "") + "]";
+      "O" + octave + " " + noteName + (this.duration || "") + (this.dots ? "." : "") + "]";
   }
 };
 
@@ -75,7 +76,7 @@ function MMLAssembler(code) {
   this.currentPart = new MMLPart(0);
   this.parts = new Map([[0, this.currentPart]]); // part id -> MMLPart
   this.tempos = []; // array of tempo marks
-  this.outputHTML = []; // TODO: better HTML output
+  this.outputHTML = document.createDocumentFragment(); // TODO: better HTML output
 }
 
 // private! convert MML code to MMLNotes
@@ -131,10 +132,11 @@ MMLAssembler.prototype.musicToNotes = function () {
     var text = this.reader.data.substr(startPos, this.reader.pos - startPos);
     pos = this.reader.pos;
     if (spaces.length > 0)
-      this.outputHTML.push("<span class='comment'>" + safeInnerHTML(spaces) + "</span>");
-    this.outputHTML.push("<span class='" + cls + "'>" + safeInnerHTML(text) + "</span>");
+      this.createSpan(spaces, "comment");
+    this.createSpanForInstr(text, cls);
   }
-  codeOut.innerHTML = this.outputHTML.join("");
+  codeOut.innerHTML = "";
+  codeOut.appendChild(this.outputHTML);
 };
 
 // private! set octave of current context
@@ -142,4 +144,32 @@ MMLAssembler.prototype.setOctave = function (octave) {
   if (octave > 9) octave = 9;
   else if (octave < -1) octave = -1;
   this.currentPart = octave;
+};
+
+// private! create a <span> element
+MMLAssembler.prototype.createSpan = function (comments, cls, inside) {
+  var span = document.createElement("span");
+  span.className = cls;
+  span.textContent = comments;
+  if (!inside) this.outputHTML.appendChild(span);
+  return span;
+};
+
+// private! create a <span> element for instruction
+MMLAssembler.prototype.createSpanForInstr = function (text, cls) {
+  var span = document.createElement("span");
+  span.className = cls;
+  var instrs = text.split(/((?:\s|;.*\n)+)/);
+  for (var i = 0; i < instrs.length; i++) {
+    var inside;
+    if (i%2 == 0) { // instruction
+      inside = document.createTextNode(instrs[i]);
+    }
+    else { // comment
+      inside = this.createSpan(instrs[i], "comment", true);
+    }
+    span.appendChild(inside);
+  }
+  this.outputHTML.appendChild(span);
+  return span;
 };

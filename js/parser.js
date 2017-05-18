@@ -9,12 +9,21 @@ function MMLReader(code) {
   this.startPos = 0;
 };
 
-// get next non-whitespace character
+// get next non-whitespace non-comment character
 MMLReader.prototype.nextChar = function () {
   this.lastPos = this.pos;
-  while (/\s/.test(this.data.charAt(this.pos))) {
-    ++this.pos;
-  }
+  var hasComment = true;
+  do {
+    while (/\s/.test(this.data.charAt(this.pos))) {
+      ++this.pos;
+    }
+    if (this.data.charAt(this.pos) == ';') {
+      do {
+        ++this.pos;
+      } while (!this.atEnd() && this.data.charAt(this.pos) != '\n');
+    }
+    else hasComment = false;
+  } while (hasComment);
   return this.data.charAt(this.pos++);
 };
 
