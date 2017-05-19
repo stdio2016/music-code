@@ -111,7 +111,6 @@ MMLReader.prototype.next = function () {
       return this.readRest();
     case 'V': // /V\d*/
       num = this.nextInt();
-      if (num === null) num = 80;
       return {type:'volume', volume: num};
     case 'T': // /T\d*(\.\d*)?/
       num = this.nextFloat();
@@ -147,7 +146,7 @@ MMLReader.prototype.readAccidental = function (allowNatural) {
     else if (ch === "-") {
       accid--;
     }
-    else if (ch === "@" && allowNatural) {
+    else if (ch === "=" && allowNatural) {
       accid = 0;
     }
     else {
@@ -205,7 +204,7 @@ MMLReader.prototype.readN = function () {
 // read key change
 MMLReader.prototype.readKey = function () {
   var key = this.nextChar().toUpperCase();
-  if (key === null || key > "G" || key < "A") {
+  if (key === "" || key > "G" || key < "A") {
     this.rewind();
     key = null;
   }

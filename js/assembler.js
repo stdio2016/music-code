@@ -53,6 +53,8 @@ function MMLPart(partId) {
   this.tiedNotes = new Map(); // MIDI pitch number -> tied MMLNote
   this.tyingNotes = new Map(); // MIDI pitch number -> tying MMLNote
   this.lastTiedPos = -1; // last "&" instruction tied note position
+  this.retainVolume = false; // last command is "V" without number
+  this.chordMode = false; // next note is in the chord
 }
 
 MMLPart.prototype.toString = function () {
@@ -64,7 +66,7 @@ MMLPart.prototype.toString = function () {
 // tempo mark
 function MMLTempoMark(position, tempo) {
   if (!(this instanceof MMLTempoMark))
-    return new MMLTempoMark(pos, tempo);
+    return new MMLTempoMark(position, tempo);
   this.position = position; // position. Unit is whole notes
   this.bpm = tempo; // quarter notes per minute
 }
@@ -81,8 +83,7 @@ function MMLAssembler(code) {
   this.currentPart = new MMLPart(0);
   this.parts = new Map([[0, this.currentPart]]); // part id -> MMLPart
   this.tempos = []; // array of tempo marks
-  this.chordMode = false; // next note is in the chord
-  this.key = 0; // C major
+  this.key = [0, 0]; // C major, [CDEFGAB, sharp or flat]
   this.outputHTML = document.createDocumentFragment(); // TODO: better HTML output
 }
 
@@ -117,19 +118,26 @@ MMLAssembler.prototype.musicToNotes = function () {
         cls = "octave";
         break;
       case "tempo":
+        this.tempos.push(new MMLTempoMark(this.currentPart.pos, instr.bpm));
         break;
       case "duration":
+        this.currentPart.duration = instr.duration;
         break;
       case "volume":
+        if (instr.volume === null)
+          this.currentPart.retainVolume = true;
+        else
+          this.currentPart.volume = instr.volume;
         break;
       case "musicFeel":
         break;
       case "part":
         break;
       case "chord":
-        this.chordMode = true;
+        this.currentPart.chordMode = true;
         break;
       case "key":
+        this.setKey(instr.key, instr.alter);
         break;
       default: cls = "syntax-error";
     }
@@ -170,7 +178,7 @@ MMLAssembler.prototype.getPitch = function (pitch, alter) {
   ];
   var keyPitch = [9, 11, 0, 2, 4, 5, 7];
   var alt = alter;
-  if (alter === null) alt = keyTable[this.key][ptc];
+  if (alter === null) alt = keyTable[this.key[0]][ptc] + this.key[1];
   return (this.currentPart.octave + 1) * 12 + keyPitch[ptc] + alt;
 };
 
@@ -190,7 +198,7 @@ MMLAssembler.prototype.addNote = function (pitch, duration, dots, tied) {
   }
   if (pitch !== "rest") pitch += this.currentPart.transpose;
   var note = new MMLNote(pitch, duration, dots);
-  if (!this.chordMode) { // advance the position
+  if (!part.chordMode) { // advance the position
     part.tiedNotes = part.tyingNotes;
     part.tyingNotes = new Map();
     part.pos += 1 / duration;
@@ -204,11 +212,16 @@ MMLAssembler.prototype.addNote = function (pitch, duration, dots, tied) {
   if (tied) { // tied to next note
     part.tyingNotes.set(pitch, note);
   }
-  note.volume = part.volume;
-  note.chord = this.chordMode;
+  if (part.retainVolume && note.tieBefore !== null) {
+    note.volume = note.tieBefore.volume;
+    part.retainVolume = false;
+  }
+  else
+    note.volume = part.volume;
+  note.chord = part.chordMode;
   note.feel = part.feel;
   part.notes.push(note);
-  this.chordMode = false;
+  part.chordMode = false;
   return note;
 };
 
@@ -224,6 +237,16 @@ MMLAssembler.prototype.addTie = function () {
     else break;
   } while (part.notes[i].chord);
   part.lastTiedPos = part.notes.length - 1;
+};
+
+MMLAssembler.prototype.setKey = function (key, alter) {
+  if (key === null) { // "K+" or "K--" or simply "K"
+    this.currentPart.transpose += alter || 0;
+  }
+  else { // "KA" means A major, "KE-" means Eb major, and so on
+    var k = "CDEFGAB".indexOf(key);
+    this.key = [k , alter || 0];
+  }
 };
 
 // private! create a <span> element
