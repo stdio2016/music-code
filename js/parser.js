@@ -7,6 +7,7 @@ function MMLReader(code) {
   this.pos = 0;
   this.lastPos = 0;
   this.startPos = 0;
+  this.compatMode = false; // to support Mabinogi MML format
 };
 
 // get next non-whitespace non-comment character
@@ -18,6 +19,7 @@ MMLReader.prototype.nextChar = function () {
       ++this.pos;
     }
     if (this.data.charAt(this.pos) == ';') {
+      this.compatMode = false; // semicolon marks the end of Mabinogi MML
       do {
         ++this.pos;
       } while (!this.atEnd() && this.data.charAt(this.pos) != '\n');
@@ -92,6 +94,8 @@ MMLReader.prototype.next = function () {
     case 'A': case 'B': // /[A-G][+#-@]*\d*\.?~?
       return this.readNote(ch.toUpperCase());
     case ',': case '<':
+      if (this.compatMode && ch == ',')
+        return {type: 'part', part: 'next'};
       return {type: 'octaveChange', octave: -1};
     case "'": case '>':
       return {type: 'octaveChange', octave: +1};
@@ -111,6 +115,7 @@ MMLReader.prototype.next = function () {
       return this.readRest();
     case 'V': // /V\d*/
       num = this.nextInt();
+      if (num !== null) num /= (this.compatMode ? 15 : 127);
       return {type:'volume', volume: num};
     case 'T': // /T\d*(\.\d*)?/
       num = this.nextFloat();
@@ -121,6 +126,8 @@ MMLReader.prototype.next = function () {
       return this.readN();
     case '&':
       return {type: 'tie'};
+    case 'M':
+      return this.readMusicFeel();
   // my extension
     case 'K': // /K[A-G]?[+#-]*
       return this.readKey();
@@ -210,4 +217,27 @@ MMLReader.prototype.readKey = function () {
   }
   var accid = this.readAccidental(false);
   return {type: 'key', key: key, alter: accid};
+};
+
+MMLReader.prototype.readMusicFeel = function () {
+  var feel = this.nextChar().toUpperCase();
+  var f = 7/8;
+  if (feel === "M") {
+    var pos = this.pos;
+    if (this.nextChar().toUpperCase() === "L") {
+      if (this.nextChar() === "@") { // MML@ marks the begin of Mabinogi MML
+        this.compatMode = true;
+        f = 1;
+      }
+      else {
+        this.lastPos = pos;
+        this.rewind();
+      }
+    }
+    else this.rewind();
+  }
+  else if (feel === "L") f = 1; // ML largo
+  else if (feel === "N") f = 7/8; // MN normal
+  else if (feel === "S") f = 3/4; // MS staccato
+  return {type: 'musicFeel', feel: f};
 };

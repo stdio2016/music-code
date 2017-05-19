@@ -32,7 +32,9 @@ MMLNote.prototype.toString = function () {
     if (octave < 0) octave = "0<";
     var noteName = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][this.pitch % 12];
     return "[MMLNote " + (this.chord ? "/" : "") +
-      "O" + octave + " " + noteName + (this.duration || "") + (this.dots ? "." : "") + "]";
+      (this.tieBefore ? "~" : "") + "V" + Math.round(this.volume * 127) +
+      " O" + octave + " " + noteName + (this.duration || "") + (this.dots ? "." : "") +
+      (this.tieAfter ? "~" : "") + "]";
   }
 };
 
@@ -130,8 +132,10 @@ MMLAssembler.prototype.musicToNotes = function () {
           this.currentPart.volume = instr.volume;
         break;
       case "musicFeel":
+        this.currentPart.feel = instr.feel;
         break;
       case "part":
+        this.switchPart(instr.part);
         break;
       case "chord":
         this.currentPart.chordMode = true;
@@ -247,6 +251,16 @@ MMLAssembler.prototype.setKey = function (key, alter) {
     var k = "CDEFGAB".indexOf(key);
     this.key = [k , alter || 0];
   }
+};
+
+MMLAssembler.prototype.switchPart = function (part) {
+  if (part === "next") part = this.currentPart.id + 1;
+  var p = this.parts.get(part);
+  if (!this.parts.has(part)) {
+    p = new MMLPart(part);
+    this.parts.set(part, p);
+  }
+  this.currentPart = p;
 };
 
 // private! create a <span> element
