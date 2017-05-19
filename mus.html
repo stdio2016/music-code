@@ -104,7 +104,8 @@ function gotoMode(mode){
   divEditMode.style.display = "none";
   if(mode == "play"){
     divPlayMode.style.display = "";
-    MMLAssembler(codeIn.value).musicToNotes();
+    window.asm = MMLAssembler(codeIn.value);
+    asm.musicToNotes();
     togglePlayPause();
   }
   if(mode == "edit"){

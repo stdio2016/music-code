@@ -51,6 +51,8 @@ function MMLPart(partId) {
   this.transpose = 0; // current transpose in semitones
   this.pos = 0; // current position. Unit is whole notes
   this.tiedNotes = new Map(); // MIDI pitch number -> tied MMLNote
+  this.tyingNotes = new Map(); // MIDI pitch number -> tying MMLNote
+  this.lastTiedPos = -1; // last "&" instruction tied note position
 }
 
 MMLPart.prototype.toString = function () {
@@ -104,6 +106,7 @@ MMLAssembler.prototype.musicToNotes = function () {
         this.addNote("rest", instr.duration, instr.dots, false);
         break;
       case "tie":
+        this.addTie();
         break;
       case "octave":
         this.setOctave(instr.octave);
@@ -187,16 +190,40 @@ MMLAssembler.prototype.addNote = function (pitch, duration, dots, tied) {
   }
   if (pitch !== "rest") pitch += this.currentPart.transpose;
   var note = new MMLNote(pitch, duration, dots);
-  // TODO: tie note
+  if (!this.chordMode) { // advance the position
+    part.tiedNotes = part.tyingNotes;
+    part.tyingNotes = new Map();
+    part.pos += 1 / duration;
+  }
+  if (part.tiedNotes.has(pitch)) { // tied to previous note
+    var tiedNote = part.tiedNotes.get(pitch);
+    part.tiedNotes.delete(pitch);
+    note.tieBefore = tiedNote;
+    tiedNote.tieAfter = note;
+  }
+  if (tied) { // tied to next note
+    part.tyingNotes.set(pitch, note);
+  }
   note.volume = part.volume;
   note.chord = this.chordMode;
   note.feel = part.feel;
   part.notes.push(note);
-  if (!this.chordMode) { // advance the position
-    part.pos += 0.25 / duration;
-  }
   this.chordMode = false;
   return note;
+};
+
+// private! add tie to the current note/chord
+MMLAssembler.prototype.addTie = function () {
+  var part = this.currentPart;
+  var i = part.notes.length;
+  do {
+    --i;
+    if (i > part.lastTiedPos) {
+      part.tyingNotes.set(part.notes[i].pitch, part.notes[i]);
+    }
+    else break;
+  } while (part.notes[i].chord);
+  part.lastTiedPos = part.notes.length - 1;
 };
 
 // private! create a <span> element
