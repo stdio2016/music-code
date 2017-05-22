@@ -94,19 +94,19 @@ MMLAssembler.prototype.musicToNotes = function () {
   var pos = 0;
   while (!this.reader.atEnd()) {
     var instr = this.reader.next();
-    var cls = "instruction";
+    var cls = "instruction", note = null;
     switch (instr && instr.type) {
       case "note":
         cls = "note";
-        this.addNote(this.getPitch(instr.pitch, instr.alter), instr.duration, instr.dots, instr.tied);
+        note = this.addNote(this.getPitch(instr.pitch, instr.alter), instr.duration, instr.dots, instr.tied);
         break;
       case "noteN":
         cls = "note";
-        this.addNote(instr.pitch, null, instr.dots, instr.tied);
+        note = this.addNote(instr.pitch, null, instr.dots, instr.tied);
         break;
       case "rest":
         cls = "note";
-        this.addNote("rest", instr.duration, instr.dots, false);
+        note = this.addNote("rest", instr.duration, instr.dots, false);
         break;
       case "tie":
         this.addTie();
@@ -153,7 +153,8 @@ MMLAssembler.prototype.musicToNotes = function () {
     pos = this.reader.pos;
     if (spaces.length > 0)
       this.createSpan(spaces, "comment");
-    this.createSpanForInstr(text, cls);
+    var source = this.createSpanForInstr(text, cls);
+    if (note !== null) note.source = source;
   }
   codeOut.innerHTML = "";
   codeOut.appendChild(this.outputHTML);
@@ -287,4 +288,53 @@ MMLAssembler.prototype.createSpanForInstr = function (text, cls) {
     }
   }
   return spans;
+};
+
+MMLAssembler.prototype.assemble = function () {
+  this.tempos.sort(function (a, b) { return a.position - b.position; });
+  if (this.tempos.length == 0 || this.tempos[0].position > 0) {
+    this.tempos.splice(0, 0, new MMLTempoMark(0, 120));
+  }
+  var tm = [0], totle = 0;
+  for (var i = 1; i < this.tempos.length; i++) {
+    var d = 60 * 4 / this.tempos[i-1].bpm * (this.tempos[i].position - this.tempos[i-1].position);
+    tm.push(totle += d);
+  }
+  var result = [];
+  this.parts.forEach(function (part) {
+    result.push(this.assemblePart(part, tm));
+  }, this);
+  return result;
+};
+
+// private! convert one part to PlayerTrack
+MMLAssembler.prototype.assemblePart = function (part, timetable) {
+  var notes = [], tm = [0], idx = 0, pos = 0;
+  for (var i = 0; i < part.notes.length; i++) {
+    var n = part.notes[i];
+    if (!n.chord) {
+      pos += 1 / n.duration * (2 - Math.pow(0.5, n.dots));
+      while (idx < this.tempos.length - 1 && this.tempos[idx+1].position < pos) {
+        idx++;
+      }
+      var sec = 60 * 4 / this.tempos[idx].bpm;
+      tm.push(sec * (pos - this.tempos[idx].position) + timetable[idx]);
+    }
+  }
+  for (var i = 0, idx = 0; i < part.notes.length; i++, idx++) {
+    var n = part.notes[i];
+    if (n.chord) {
+      idx--;
+    }
+    n.start = tm[idx];
+    if (n.type === "note" && n.tieBefore === null) {
+      var j = idx + 1, nn = n;
+      while (nn.tieAfter) {
+        nn = nn.tieAfter; j++;
+      }
+      var feel = (tm[j] - tm[j-1]) * nn.feel;
+      notes.push(new PlayerNote(tm[idx], tm[j-1] + feel, n));
+    }
+  }
+  return new PlayerTrack(notes);
 };
