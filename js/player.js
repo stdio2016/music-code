@@ -3,6 +3,9 @@ function note(pitch,start,end){
   var src = actx.createBufferSource();
   var env = actx.createGain();
   src.buffer = fakePno.sample;
+  src.loop = true;
+  src.loopStart = fakePno.loopStart;
+  src.loopEnd = fakePno.loopEnd;
   src.playbackRate.value = Math.pow(2, (pitch - 69) / 12);
   src.connect(env);
   env.connect(master);
