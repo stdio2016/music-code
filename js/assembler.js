@@ -192,14 +192,14 @@ MMLAssembler.prototype.getPitch = function (pitch, alter) {
 MMLAssembler.prototype.addNote = function (pitch, duration, dots, tied) {
   var part = this.currentPart;
   if (dots == 0) {
-    if (duration === null) {
+    if (duration === null || duration < 1) {
       dots = part.dots;
     }
     else {
       dots = 0;
     }
   }
-  if (duration === null) {
+  if (duration === null || duration < 1) {
     duration = part.duration;
   }
   if (pitch !== "rest") pitch += this.currentPart.transpose;
