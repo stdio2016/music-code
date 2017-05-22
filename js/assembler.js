@@ -124,6 +124,7 @@ MMLAssembler.prototype.musicToNotes = function () {
         break;
       case "duration":
         this.currentPart.duration = instr.duration;
+        this.currentPart.dots = instr.dots;
         break;
       case "volume":
         if (instr.volume === null)
@@ -190,7 +191,7 @@ MMLAssembler.prototype.getPitch = function (pitch, alter) {
 // private! add a note to current part
 MMLAssembler.prototype.addNote = function (pitch, duration, dots, tied) {
   var part = this.currentPart;
-  if (dots === null) {
+  if (dots == 0) {
     if (duration === null) {
       dots = part.dots;
     }
@@ -255,12 +256,17 @@ MMLAssembler.prototype.setKey = function (key, alter) {
 };
 
 MMLAssembler.prototype.switchPart = function (part) {
-  if (part === "next") part = this.currentPart.id + 1;
+  var compat = false;
+  if (part === "next") {
+    part = this.currentPart.id + 1;
+    compat = true;
+  }
   var p = this.parts.get(part);
   if (!this.parts.has(part)) {
     p = new MMLPart(part);
     this.parts.set(part, p);
   }
+  if (compat) p.feel = 1; // MML@ compat mode
   this.currentPart = p;
 };
 

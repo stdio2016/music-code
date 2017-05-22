@@ -203,6 +203,9 @@ MMLReader.prototype.readRest = function () {
 // read note in MIDI pitch format
 MMLReader.prototype.readN = function () {
   var pitch = this.nextInt();
+  if (this.compatMode && pitch !== null) {
+    pitch += 12;
+  }
   if (pitch === null) pitch = 60;
   var dots = this.readDot();
   return {type: 'noteN', pitch: pitch, dots: dots, pos: [this.startPos, this.pos]};
