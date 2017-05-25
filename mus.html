@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Music code player</title>
 <script src='js/sound.js'></script>
+<script src='js/playerTrack.js'></script>
 <script src='js/player.js'></script>
 <script src='js/parser.js'></script>
 <script src='js/assembler.js'></script>
-<script src='js/playerTrack.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 <link rel='stylesheet' href='css/alertbox.css'>
 </head>
@@ -48,7 +48,7 @@
   </p>
   <p>
     <input type='button' id='btnPlayPause' value='Play' onclick='togglePlayPause()'>
-    <input type='button' value='Stop' onclick='stop()'>
+    <input type='button' value='Stop' onclick='stopMusic()'>
     <label><input type='checkbox' id='chkLoopMusic'>Loop Music</label>
   </p>
   <p>
@@ -107,6 +107,7 @@ function gotoMode(mode){
     divPlayMode.style.display = "";
     window.asm = MMLAssembler(codeIn.value);
     asm.musicToNotes();
+    window.player = asm.assemble();
     togglePlayPause();
   }
   if(mode == "edit"){
@@ -132,8 +133,15 @@ function togglePlayPause(){
   }
   else {
     btnPlayPause.value = "Pause";
-    play();
+    for (var i = 0; i < player.length; i++) {
+      player[i].play();
+    }
     isPlaying = true;
+  }
+}
+function stopMusic() {
+  for (var i = 0; i < player.length; i++) {
+    player[i].stop();
   }
 }
 </script>

@@ -30,20 +30,23 @@ function PlayerTrack(notes) {
   }
   helper(0, nn.length);
   this.notes = nn;
+  this.playingNotes = {};
+  this.pos = 0;
+  this.state = "stopped";
 }
 
-// Find all notes within range [from, to]
+// Find all notes within range (from, to]
 PlayerTrack.prototype.forEachInRange = function (from, to, call) {
   var notes = this.notes;
   function bs(i, j) {
     if (i == j) return ;
     var mid = Math.floor((i + j) / 2), n = notes[mid];
     if (n.maxEnd < from) return ;
-    if (n.hasIntersect(from, to)) {
-      call(n);
-    }
     if (i < j - 1)
       bs(i, mid);
+    if (n.start <= to && n.end > from) {
+      call(n);
+    }
     if (n.start <= to)
       bs(mid + 1, j);
   }
@@ -54,11 +57,11 @@ PlayerTrack.prototype.forEachInRange = function (from, to, call) {
 PlayerTrack.prototype.getFirstAfter = function (time) {
   var notes = this.notes;
   function bs(from, to, time) {
-    if (from == to) return from;
+    if (from >= to) return from;
     var mid = Math.floor((from + to) / 2);
-    if (notes[mid].start > time) {
-      if (from + 1 == to) return mid;
-      return bs(from, mid + 1, time);
+    if (mid >= notes.length || notes[mid].start > time) {
+      if (mid < 1 || notes[mid-1].start <= time) return mid;
+      return bs(from, mid, time);
     }
     else
       return bs(mid + 1, to, time);
@@ -72,12 +75,6 @@ function PlayerNote(start, end, data) {
   this.data = data;
   this.maxEnd = end;
 }
-
-PlayerNote.prototype.hasIntersect = function (from, to) {
-  if (this.end < from) return false;
-  if (to < this.start) return false;
-  return true;
-};
 
 PlayerNote.prototype.toString = function () {
   return "("+this.start+" -> "+this.end+"): "+this.data;
