@@ -62,4 +62,12 @@ MML 是 Music Macro Language 的縮寫。本程式使用的 MML 語法不分大�
   <td>T</td>
   <td>設定節拍速度，例如 <code>T120</code> 是以每分鐘 120 拍來播放。一拍是四分音符的長度。</td>
 </tr>
+<tr>
+  <td>N</td>
+<td>
+<p>用數字來輸入音高，格式為 <code>N 音高 附點 連接線符號</code>，音高是非負整數，以半音階為單位，並定義 <code>N48</code> 表示中央Do。</p>
+
+<p><code>N</code> 可以加附點，但是不能指定長度，如果要改變 <code>N</code> 音符的長度，請使用 <code>L 長度</code> 指令</p>
+  </td>
+</tr>
 </table>
