@@ -32,6 +32,7 @@ MML 是 Music Macro Language 的縮寫。本程式使用的 MML 語法不分大�
   <td>P 或 R</td>
   <td>
 休止符，和音符的格式很相似，但沒有音高、升降號，也沒有連接線。如 <code>P 4</code> 和 <code>R4</code> 都表示四分休止符
+  </td>
 </tr>
 <tr>
   <td>O</td>
