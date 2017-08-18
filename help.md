@@ -25,7 +25,7 @@ MML 是 Music Macro Language 的縮寫。本程式使用的 MML 語法不分大�
 
 <p>以上的各部分，除了音高外都可以省略。而且各部分可用空格分隔，也可以完全不分隔。
 
-<p>如 <xode>A + 2 .</code> 和 <code>A+2.</code> 都表示升A (La) 附點二分音符
+<p>如 <code>A + 2 .</code> 和 <code>A+2.</code> 都表示升A (La) 附點二分音符
   </td>
 </tr>
 <tr>
