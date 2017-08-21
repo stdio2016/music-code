@@ -3,6 +3,10 @@ input[type="range"] {
   background: none;
 }
 
+#codeOut, #codeIn {
+  font-family: Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+}
+
 span.normal {
   color: black;
 }
@@ -18,9 +22,13 @@ span.syntax-error {
 }
 
 span.octave {
-  color: mediumseagreen;
+  color: #5c4;
 }
 
 span.instruction{
-  color: magenta;
+  color: blue;
+}
+
+span.note {
+  color: brown;
 }
