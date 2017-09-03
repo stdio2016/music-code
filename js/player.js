@@ -24,9 +24,9 @@ function noteOff(state, end, onended) {
   env.gain.setValueAtTime(1, endtime);
   env.gain.linearRampToValueAtTime(0, endtime + 0.05);
   if(src.stop)
-    src.stop(endtime);
+    src.stop(endtime + 0.05);
   else {
-    src.noteOff(endTime);
+    src.noteOff(endTime + 0.05);
   }
   src.onended = onended;
 }
