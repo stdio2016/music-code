@@ -66,6 +66,7 @@ MmlTokenizer.prototype.reject = function () {
 };
 
 MmlTokenizer.prototype.accept = function (type) {
+  if (this.spanPos <= 0) return this.spans.length;
   this.addSpace(this.buf[0]);
   var pos = this.spans.length;
   var sum = this.buf[0][0];
@@ -122,4 +123,19 @@ MmlTokenizer.prototype.toHTML = function () {
   if (has)
     doc.appendChild(line);
   return doc;
+};
+
+function MmlParser(code) {
+  this.scanner = new MmlTokenizer(code);
+}
+
+MmlParser.prototype.getInt = function () {
+  var ch = this.scanner.next(), d = 0;
+  while (/\d/.test(ch)) {
+    d = d * 10 + (ch.charCodeAt(0) - 48);
+    ch = this.scanner.next();
+  }
+  this.scanner.rewind();
+  this.scanner.accept("number");
+  return d;
 };
