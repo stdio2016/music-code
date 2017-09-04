@@ -21,7 +21,6 @@ MmlTokenizer.prototype.next = function () {
     ch = this.buf[this.spanPos][0];
   }
   else {
-    if (this.pos >= this.data.length) return "";
     var sep = [""];
     var oldPos = this.pos;
     var comment = true;
@@ -131,11 +130,28 @@ function MmlParser(code) {
 
 MmlParser.prototype.getInt = function () {
   var ch = this.scanner.next(), d = 0;
+  var has = false;
   while (/\d/.test(ch)) {
+    has = true;
     d = d * 10 + (ch.charCodeAt(0) - 48);
     ch = this.scanner.next();
   }
   this.scanner.rewind();
   this.scanner.accept("number");
-  return d;
+  return has ? d : null;
+};
+
+MmlParser.prototype.getAccidental = function () {
+  var ch, d = 0, still = true, has = false;
+  do {
+    ch = this.scanner.next();
+    if (ch === "+" || ch === "#") d++;
+    else if (ch === "=" || ch === "@") d = d;
+    else if (ch === "-") d--;
+    else still = false;
+    if (still) has = true;
+  } while (still);
+  this.scanner.rewind();
+  this.scanner.accept("accidental");
+  return has ? d : null;
 };
