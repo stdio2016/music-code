@@ -86,6 +86,7 @@ MmlTokenizer.prototype.accept = function (type) {
   return pos;
 };
 
+// private!
 MmlTokenizer.prototype.addSpace = function (tok) {
   for (var i=1; i<tok.length; i++) {
     if (tok[i].length === 0) continue;
@@ -137,7 +138,6 @@ MmlParser.prototype.getInt = function () {
     ch = this.scanner.next();
   }
   this.scanner.rewind();
-  this.scanner.accept("number");
   return has ? d : null;
 };
 
@@ -152,6 +152,26 @@ MmlParser.prototype.getAccidental = function () {
     if (still) has = true;
   } while (still);
   this.scanner.rewind();
-  this.scanner.accept("accidental");
   return has ? d : null;
+};
+
+MmlParser.prototype.getDot = function () {
+  var ch = this.scanner.next(), d = 0;
+  while (ch === ".") {
+    d++;
+    ch = this.scanner.next();
+  }
+  this.scanner.rewind();
+  return d;
+};
+
+MmlParser.prototype.getNote = function (abc) {
+  var ptc = abc.charCodeAt(0) - 65;
+  ptc = [9, 11, 0, 2, 4, 5, 7][ptc];
+  var acc = this.getAccidental();
+  this.scanner.accept("pitch");
+  var du = this.getInt();
+  var dot = this.getDot();
+  this.scanner.accept("duration");
+  return new MMLNote(abc, du, dot);
 };
