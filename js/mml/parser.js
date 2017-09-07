@@ -2,6 +2,10 @@ function MmlParser(code) {
   this.scanner = new MmlTokenizer(code);
 }
 
+MmlParser.prototype.addToken = function (tokenStart) {
+  console.log("add token from span #" + tokenStart + " to #" + (this.scanner.spans.length - 1));
+};
+
 MmlParser.prototype.getInt = function () {
   var ch = this.scanner.next(), d = 0;
   var has = false;
@@ -38,7 +42,7 @@ MmlParser.prototype.getDot = function () {
   return d;
 };
 
-MmlParser.prototype.getNote = function (abc) {
+MmlParser.prototype.readNote = function (abc) {
   var ptc = abc.charCodeAt(0) - 65;
   ptc = [9, 11, 0, 2, 4, 5, 7][ptc];
   var acc = this.getAccidental();
@@ -46,5 +50,61 @@ MmlParser.prototype.getNote = function (abc) {
   var du = this.getInt();
   var dot = this.getDot();
   this.scanner.accept("duration");
-  return new MMLNote(abc, du, dot, this.addToken());
+  return new MMLNote(ptc, du, dot, this.addToken(tokenStart));
+};
+
+MmlParser.prototype.next = function () {
+  var ch = this.scanner.next();
+  var num;
+  switch(ch.toUpperCase()){
+    case 'C': case 'D': case 'E': case 'F': case 'G':
+    case 'A': case 'B': // /[A-G][+#-@]*\d*\.?~?
+      return this.readNote(ch.toUpperCase());
+    case ',': case '<':
+      if (this.compatMode && ch == ',')
+        return {type: 'part', part: 'next'};
+      return {type: 'octaveChange', octave: -1};
+    case "'": case '>':
+      return {type: 'octaveChange', octave: +1};
+    case 'O': // /O\d//
+      num = this.getInt();
+      if (num === null) num = 4;
+      if (num > 9) {
+        num = 4;
+      }
+      return {type: 'octave', octave: +num};
+    case 'L': // /L\d*\.?/
+      num = this.getInt();
+      if (num === null || num < 1) num = 4;
+      return {type: 'duration', duration: num, dots: this.readDot()};
+    case 'P': case 'R': // /[PR]\d*\.?/
+      return this.readRest();
+    case 'V': // /V\d*/
+      num = this.getInt();
+      if (num !== null) num /= (this.compatMode ? 15 : 127);
+      return {type:'volume', volume: num};
+    case 'T': // /T\d*(\.\d*)?/
+      num = this.getFloat();
+      if (num === null || num < 20) num = 120;
+      if (num > 1000) num = 1000;
+      return {type: 'tempo', bpm: num};
+    case 'N': // /N\d*\.?~?/
+      return this.readN();
+    case '&':
+      return {type: 'tie'};
+    case 'M':
+      return this.readMusicFeel();
+    // my extension
+    case 'K': // /K[A-G]?[+#-]*
+      return this.readTranspose();
+    case '!': // /!\d*/
+      num = this.getInt();
+      if (num === null) num = 0;
+      return {type: 'part', part: num};
+    case '/':
+      return {type: 'chord'};
+    default:
+      this.scanner.reject();
+      return null;
+  }
 };
