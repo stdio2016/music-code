@@ -3,7 +3,21 @@ function MmlParser(code) {
   this.tokens = [];
   this.current = new MMLPart(0);
   this.parts = [this.current];
+  this.key = MmlParser.KEY_TABLE[2];
+  this.keyAccidental = 0;
+  this.transpose = 0;
 }
+MmlParser.KEY_TABLE = [
+  //       pitch
+  //A  B  C  D  E  F  G     key
+  [ 0, 0,+1, 0, 0,+1,+1], // A
+  [+1, 0,+1,+1, 0,+1,+1], // B
+  [ 0, 0, 0, 0, 0, 0, 0], // C
+  [ 0, 0,+1, 0, 0,+1, 0], // D
+  [ 0, 0,+1,+1, 0,+1,+1], // E
+  [ 0,-1, 0, 0, 0, 0, 0], // F
+  [ 0, 0, 0, 0, 0,+1, 0]  // G
+];
 
 MmlParser.prototype.addToken = function (tokenStart) {
   console.log("add token from span #" + tokenStart + " to #" + (this.scanner.spans.length - 1));
@@ -48,20 +62,44 @@ MmlParser.prototype.getDot = function () {
 
 MmlParser.prototype.readNote = function (abc) {
   var ptc = abc.charCodeAt(0) - 65;
-  ptc = [9, 11, 0, 2, 4, 5, 7][ptc];
   var acc = this.getAccidental();
+  if (acc === null) ptc = this.key[ptc] + this.keyAccidental;
+  else ptc = [9, 11, 0, 2, 4, 5, 7][ptc] + acc;
+  ptc += this.current.octave * 12 + 12 + this.transpose;
+  if (ptc > 127) ptc = 127;
   var tokenStart = this.scanner.accept("note");
   var du = this.getInt();
   var dot = this.getDot();
+  if (du === null) {
+    du = this.current.duration;
+    if (dot === 0) dot = this.current.dot;
+  }
   this.scanner.accept("duration");
   var note = new MMLNote(ptc, du, dot);
   note.tokenId = this.addToken(tokenStart);
+  note.volume = this.current.volume;
+  this.current.notes.push(note);
+};
+
+MmlParser.prototype.readRest = function () {
+  var tokenStart = this.scanner.accept("note");
+  var du = this.getInt();
+  var dot = this.getDot();
+  if (du === null) {
+    du = this.current.duration;
+    if (dot === 0) dot = this.current.dot;
+  }
+  this.scanner.accept("duration");
+  var note = new MMLNote("rest", du, dot);
+  note.tokenId = this.addToken(tokenStart);
+  this.current.notes.push(note);
 };
 
 MmlParser.prototype.setOctave = function (num) {
   if (num > 9) num = 9;
   if (num < -1) num = -1;
   this.current.octave = num;
+  this.scanner.accept('octave');
 };
 
 MmlParser.prototype.switchPart = function (num) {
@@ -71,6 +109,7 @@ MmlParser.prototype.switchPart = function (num) {
   else {
     this.current = this.parts[num] = new MMLPart(num);
   }
+  this.scanner.accept('instruction');
 };
 
 MmlParser.prototype.next = function () {
