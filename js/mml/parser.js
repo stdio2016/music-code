@@ -6,6 +6,7 @@ function MmlParser(code) {
   this.key = MmlParser.KEY_TABLE[2];
   this.keyAccidental = 0;
   this.transpose = 0;
+  this.tempos = [];
 }
 MmlParser.KEY_TABLE = [
   //       pitch
@@ -31,6 +32,27 @@ MmlParser.prototype.getInt = function () {
     has = true;
     d = d * 10 + (ch.charCodeAt(0) - 48);
     ch = this.scanner.next();
+  }
+  this.scanner.rewind();
+  return has ? d : null;
+};
+
+MmlParser.prototype.getFloat = function () {
+  var ch = this.scanner.next(), d = 0;
+  var has = false;
+  while (/\d/.test(ch)) {
+    has = true;
+    d = d * 10 + (ch.charCodeAt(0) - 48);
+    ch = this.scanner.next();
+  }
+  if (has && ch === ".") {
+    ch = this.scanner.next();
+    var dd = 1;
+    while (/\d/.test(ch)) {
+      dd /= 10;
+      d += (ch.charCodeAt(0) - 48) * dd;
+      ch = this.scanner.next();
+    }
   }
   this.scanner.rewind();
   return has ? d : null;
@@ -109,6 +131,11 @@ MmlParser.prototype.switchPart = function (num) {
   else {
     this.current = this.parts[num] = new MMLPart(num);
   }
+  this.scanner.accept('instruction');
+};
+
+MmlParser.prototype.setTempo = function (num) {
+  this.tempos.push(new MMLTempoMark(this.current.pos, num));
   this.scanner.accept('instruction');
 };
 
