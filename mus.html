@@ -113,6 +113,17 @@ function gotoMode(mode){
     asm.musicToNotes();
     window.player = asm.assemble();
     togglePlayPause();
+    
+    dd = new MmlParser(codeIn.value);
+    while (dd.scanner.pos < dd.scanner.data.length) {
+      try {
+        dd.next();
+      } catch (t) {
+        console.error(t);
+      }
+    }
+    while (codeOut.hasChildNodes()) codeOut.removeChild(codeOut.lastChild);
+    codeOut.appendChild(dd.scanner.toHTML());
   }
   if(mode == "edit"){
     divEditMode.style.display = "";

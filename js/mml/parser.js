@@ -21,7 +21,6 @@ MmlParser.KEY_TABLE = [
 ];
 
 MmlParser.prototype.addToken = function (tokenStart) {
-  console.log("add token from span #" + tokenStart + " to #" + (this.scanner.spans.length - 1));
   return this.tokens.push(tokenStart, this.scanner.spans.length - 1) / 2 - 1;
 };
 
@@ -92,9 +91,9 @@ MmlParser.prototype.readNote = function (abc) {
   var tokenStart = this.scanner.accept("note");
   var du = this.getInt();
   var dot = this.getDot();
-  if (du === null) {
+  if (du == 0) {
     du = this.current.duration;
-    if (dot === 0) dot = this.current.dot;
+    if (dot === 0) dot = this.current.dots;
   }
   this.scanner.accept("duration");
   var note = new MMLNote(ptc, du, dot);
@@ -107,14 +106,34 @@ MmlParser.prototype.readRest = function () {
   var tokenStart = this.scanner.accept("note");
   var du = this.getInt();
   var dot = this.getDot();
-  if (du === null) {
+  if (du == 0) {
     du = this.current.duration;
-    if (dot === 0) dot = this.current.dot;
+    if (dot === 0) dot = this.current.dots;
   }
   this.scanner.accept("duration");
   var note = new MMLNote("rest", du, dot);
   note.tokenId = this.addToken(tokenStart);
   this.current.notes.push(note);
+};
+
+MmlParser.prototype.readN = function () {
+  var pitch = Math.min(this.getInt(), 127); // 0 to 127
+  var tokenStart = this.scanner.accept("note-n");
+  var dot = this.getDot();
+  if (dot === 0) dot = this.current.dots;
+  this.scanner.accept("duration");
+  var note = new MMLNote(pitch, this.current.duration, dot);
+  note.tokenId = this.addToken(tokenStart);
+  this.current.notes.push(note);
+};
+
+MmlParser.prototype.readDuration = function () {
+  var du = this.getInt();
+  if (du === null) du = 4;
+  var dot = this.getDot();
+  this.current.duration = du;
+  this.current.dots = dot;
+  this.scanner.accept('instruction');
 };
 
 MmlParser.prototype.setOctave = function (num) {
@@ -157,9 +176,7 @@ MmlParser.prototype.next = function () {
       if (num === null) num = 4;
       return this.setOctave(num);
     case 'L': // /L\d*\.?/
-      num = this.getInt();
-      if (num === null || num < 1) num = 4;
-      return {type: 'duration', duration: num, dots: this.readDot()};
+      return this.readDuration();
     case 'P': case 'R': // /[PR]\d*\.?/
       return this.readRest();
     case 'V': // /V\d*/

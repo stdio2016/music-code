@@ -7,6 +7,11 @@ input[type="range"] {
   font-family: Menlo, Consolas, 'DejaVu Sans Mono', monospace;
 }
 
+#codeOut {
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
 span.normal {
   color: black;
 }
@@ -16,7 +21,7 @@ span.comment {
   font-style: italic;
 }
 
-span.syntax-error {
+span.invalid {
   color: white;
   background-color: red;
 }
@@ -31,4 +36,12 @@ span.instruction{
 
 span.note {
   color: brown;
+}
+
+span.note-n {
+  color: magenta;
+}
+
+span.duration {
+  color: orange;
 }
