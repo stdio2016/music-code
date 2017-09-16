@@ -115,7 +115,7 @@ function gotoMode(mode){
     togglePlayPause();
     
     dd = new MmlParser(codeIn.value);
-    while (dd.scanner.pos < dd.scanner.data.length) {
+    while (dd.scanner.pos < dd.scanner.data.length || dd.scanner.buf.length > 0) {
       try {
         dd.next();
       } catch (t) {

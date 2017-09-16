@@ -158,6 +158,29 @@ MmlParser.prototype.setTempo = function (num) {
   this.scanner.accept('instruction');
 };
 
+MmlParser.prototype.addTie = function (all) {
+  this.scanner.accept('tie');
+};
+
+MmlParser.prototype.readMusicFeel = function () {
+  var ch = this.scanner.next();
+  var mml = false;
+  if (ch === "M" || ch === "m") {
+    ch = this.scanner.next();
+    if (ch === "L" || ch === "l") {
+      ch = this.scanner.next();
+      if (ch === "@") {
+        this.compatMode = true;
+        this.scanner.accept('music-feel');
+        mml = true;
+      }
+    }
+  }
+  if (!mml) {
+    this.scanner.reject();
+  }
+};
+
 MmlParser.prototype.next = function () {
   var ch = this.scanner.next();
   var num;
@@ -191,7 +214,7 @@ MmlParser.prototype.next = function () {
     case 'N': // /N\d*\.?~?/
       return this.readN();
     case '&':
-      return this.addTie();
+      return this.addTie(true);
     case 'M':
       return this.readMusicFeel();
     // my extension
