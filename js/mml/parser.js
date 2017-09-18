@@ -84,8 +84,9 @@ MmlParser.prototype.getDot = function () {
 MmlParser.prototype.readNote = function (abc) {
   var ptc = abc.charCodeAt(0) - 65;
   var acc = this.getAccidental();
-  if (acc === null) ptc = this.key[ptc] + this.keyAccidental;
-  else ptc = [9, 11, 0, 2, 4, 5, 7][ptc] + acc;
+  var k = [9, 11, 0, 2, 4, 5, 7][ptc];
+  if (acc === null) ptc = k + this.key[ptc] + this.keyAccidental;
+  else ptc = k + acc;
   ptc += this.current.octave * 12 + 12 + this.transpose;
   if (ptc > 127) ptc = 127;
   var tokenStart = this.scanner.accept("note");
@@ -179,6 +180,27 @@ MmlParser.prototype.readMusicFeel = function () {
   if (!mml) {
     this.scanner.reject();
   }
+};
+
+MmlParser.prototype.readTranspose = function () {
+  var key = this.scanner.next().toUpperCase();
+  if (/[A-G]/.test(key)) {
+    this.key = MmlParser.KEY_TABLE[key.charCodeAt(0) - 65];
+    var accid = this.getAccidental();
+    this.keyAccidental = accid || 0;
+  }
+  else {
+    this.scanner.rewind();
+    var accid = this.getAccidental();
+    if (accid !== null)
+      this.transpose += accid;
+  }
+  this.scanner.accept('instruction');
+};
+
+MmlParser.prototype.chordOn = function () {
+  this.current.chordMode = true;
+  this.scanner.accept('instruction');
 };
 
 MmlParser.prototype.next = function () {
