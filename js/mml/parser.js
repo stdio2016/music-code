@@ -166,7 +166,7 @@ MmlParser.prototype.readRest = function () {
 };
 
 MmlParser.prototype.readN = function () {
-  var pitch = Math.min(this.getInt(), 127); // 0 to 127
+  var pitch = Math.min(this.getInt() + 12, 127); // 0 to 127
   var tokenStart = this.scanner.accept("note-n");
   var dot = this.getDot();
   if (dot === 0) dot = this.current.dots;
@@ -179,7 +179,7 @@ MmlParser.prototype.readN = function () {
 
 MmlParser.prototype.readDuration = function () {
   var du = this.getInt();
-  if (du === null) du = 4;
+  if (!du) du = 4;
   var dot = this.getDot();
   this.current.duration = du;
   this.current.dots = dot;
@@ -229,7 +229,7 @@ MmlParser.prototype.readMusicFeel = function () {
       ch = this.scanner.next();
       if (ch === "@") {
         this.compatMode = true;
-        this.scanner.accept('music-feel');
+        this.scanner.accept('instruction');
         mml = true;
       }
     }
@@ -265,6 +265,12 @@ MmlParser.prototype.chordOn = function () {
   }
 };
 
+MmlParser.prototype.setVolume = function (num) {
+  if (num === null) num = 0.5;
+  this.current.volume = Math.min(num, 1);
+  this.scanner.accept('instruction');
+};
+
 MmlParser.prototype.next = function () {
   var ch = this.scanner.next();
   var num;
@@ -288,8 +294,8 @@ MmlParser.prototype.next = function () {
       return this.readRest();
     case 'V': // /V\d*/
       num = this.getInt();
-      if (num !== null) num /= (this.compatMode ? 15 : 127);
-      return null;
+      if (num !== null) num = (num+1) / (this.compatMode ? 16 : 128);
+      return this.setVolume(num);
     case 'T': // /T\d*(\.\d*)?/
       num = this.getFloat();
       if (num === null || num < 20) num = 120;
