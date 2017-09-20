@@ -81,6 +81,54 @@ MmlParser.prototype.getDot = function () {
   return d;
 };
 
+MmlParser.prototype.tryTie = function (note) {
+  if (note.tieAfter) return ; // already has tie
+  note.tieAfter = true;
+  if (this.current.tyingNotes.has(note.pitch)) {
+    this.current.tyingNotes.get(note.pitch).push(note);
+  }
+  else {
+    var t = [note];
+    t.remain = 0;
+    this.current.tyingNotes.set(note.pitch, t);
+  }
+};
+
+MmlParser.prototype.addNote = function (note) {
+  var last = this.current.notes[this.current.notes.length - 1];
+  note.chord = this.current.chordMode;
+  if (this.current.chordMode) {
+    this.current.chordMode = false;
+    note.startPos = last.startPos;
+  }
+  else {
+    this.current.tiedNotes = this.current.tyingNotes;
+    this.current.tyingNotes = new Map();
+    if (last) {
+      var du = 1 / last.duration * (2 - Math.pow(0.5, last.dots));
+      note.startPos = last.startPos + du;
+    }
+    else {
+      note.startPos = 0;
+    }
+  }
+  var ch = this.scanner.next();
+  if (ch === "~") {
+    this.tryTie(note);
+    this.scanner.accept("tie");
+  }
+  else {
+    this.scanner.rewind();
+  }
+  var tied = this.current.tiedNotes.get(note.pitch);
+  if (tied && tied.remain < tied.length) {
+    var p = tied[tied.remain++];
+    p.tieAfter = note;
+    note.tieBefore = p;
+  }
+  this.current.notes.push(note);
+};
+
 MmlParser.prototype.readNote = function (abc) {
   var ptc = abc.charCodeAt(0) - 65;
   var acc = this.getAccidental();
@@ -92,7 +140,7 @@ MmlParser.prototype.readNote = function (abc) {
   var tokenStart = this.scanner.accept("note");
   var du = this.getInt();
   var dot = this.getDot();
-  if (du == 0) {
+  if (!du) {
     du = this.current.duration;
     if (dot === 0) dot = this.current.dots;
   }
@@ -100,21 +148,21 @@ MmlParser.prototype.readNote = function (abc) {
   var note = new MMLNote(ptc, du, dot);
   note.tokenId = this.addToken(tokenStart);
   note.volume = this.current.volume;
-  this.current.notes.push(note);
+  this.addNote(note);
 };
 
 MmlParser.prototype.readRest = function () {
   var tokenStart = this.scanner.accept("note");
   var du = this.getInt();
   var dot = this.getDot();
-  if (du == 0) {
+  if (!du) {
     du = this.current.duration;
     if (dot === 0) dot = this.current.dots;
   }
   this.scanner.accept("duration");
   var note = new MMLNote("rest", du, dot);
   note.tokenId = this.addToken(tokenStart);
-  this.current.notes.push(note);
+  this.addNote(note);
 };
 
 MmlParser.prototype.readN = function () {
@@ -125,7 +173,8 @@ MmlParser.prototype.readN = function () {
   this.scanner.accept("duration");
   var note = new MMLNote(pitch, this.current.duration, dot);
   note.tokenId = this.addToken(tokenStart);
-  this.current.notes.push(note);
+  note.volume = this.current.volume;
+  this.addNote(note);
 };
 
 MmlParser.prototype.readDuration = function () {
@@ -159,7 +208,15 @@ MmlParser.prototype.setTempo = function (num) {
   this.scanner.accept('instruction');
 };
 
-MmlParser.prototype.addTie = function (all) {
+MmlParser.prototype.addTie = function () {
+  var part = this.current;
+  for (i = part.notes.length - 1; i > part.lastTiedPos ; i--) {
+    if (!part.notes[i].chord) break;
+  }
+  for (i = i; i < part.notes.length; i++) {
+    this.tryTie(part.notes[i]);
+  }
+  part.lastTiedPos = part.notes.length - 1;
   this.scanner.accept('tie');
 };
 
@@ -199,8 +256,13 @@ MmlParser.prototype.readTranspose = function () {
 };
 
 MmlParser.prototype.chordOn = function () {
-  this.current.chordMode = true;
-  this.scanner.accept('instruction');
+  if (this.current.notes.length > 0) {
+    this.current.chordMode = true;
+    this.scanner.accept('instruction');
+  }
+  else {
+    this.scanner.reject();
+  }
 };
 
 MmlParser.prototype.next = function () {
@@ -236,7 +298,7 @@ MmlParser.prototype.next = function () {
     case 'N': // /N\d*\.?~?/
       return this.readN();
     case '&':
-      return this.addTie(true);
+      return this.addTie();
     case 'M':
       return this.readMusicFeel();
     // my extension

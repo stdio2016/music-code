@@ -45,3 +45,7 @@ span.note-n {
 span.duration {
   color: orange;
 }
+
+span.tie {
+  color: green;
+}
