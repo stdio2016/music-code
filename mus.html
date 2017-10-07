@@ -112,10 +112,9 @@ function gotoMode(mode){
     window.asm = MMLAssembler(codeIn.value);
     asm.musicToNotes();
     window.player = asm.assemble();
-    togglePlayPause();
     
     dd = new MmlParser(codeIn.value);
-    while (dd.scanner.pos < dd.scanner.data.length || dd.scanner.buf.length > 0) {
+    while (dd.scanner.pos < dd.scanner.data.length) {
       try {
         dd.next();
       } catch (t) {
@@ -124,6 +123,7 @@ function gotoMode(mode){
     }
     while (codeOut.hasChildNodes()) codeOut.removeChild(codeOut.lastChild);
     codeOut.appendChild(dd.scanner.toHTML());
+    togglePlayPause();
   }
   if(mode == "edit"){
     divEditMode.style.display = "";
@@ -148,9 +148,11 @@ function togglePlayPause(){
   }
   else {
     btnPlayPause.value = "Pause";
-    for (var i = 0; i < player.length; i++) {
-      player[i].play();
-    }
+    setTimeout(function(){
+      for (var i = 0; i < player.length; i++) {
+        player[i].play();
+      }
+    }, 50);
     isPlaying = true;
   }
 }
