@@ -116,7 +116,7 @@ function gotoMode(mode){
     dd = new MmlParser(codeIn.value);
     while (dd.scanner.pos < dd.scanner.data.length) {
       try {
-        dd.next();
+        dd.nextToken();
       } catch (t) {
         console.error(t);
       }

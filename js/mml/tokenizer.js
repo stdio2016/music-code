@@ -62,6 +62,26 @@ MmlTokenizer.prototype.addSpace = function (tok) {
   }
 };
 
+MmlTokenizer.prototype.addToken = function (startPos) {
+  if (startPos < this.spans.length) {
+    var group = this.spans.splice(startPos - 1, this.spans.length - startPos + 1);
+    this.spans.push({
+      pos: group[0].pos,
+      to: group[group.length-1].to,
+      type: group[0].type,
+      child: group
+    });
+  }
+  var span = this.spans[this.spans.length - 1];
+  span.type += " selectable";
+};
+
+MmlTokenizer.prototype.setPosition = function (partId, noteIndex) {
+  var span = this.spans[this.spans.length - 1];
+  span.partId = partId;
+  span.noteIndex = noteIndex;
+};
+
 MmlTokenizer.prototype.toHTML = function () {
   var doc = document.createDocumentFragment();
   var line = document.createElement('div');

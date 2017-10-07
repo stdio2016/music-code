@@ -1,6 +1,5 @@
 function MmlParser(code) {
   this.scanner = new MmlTokenizer(code);
-  this.tokens = [];
   this.current = new MMLPart(0);
   this.parts = [this.current];
   this.key = MmlParser.KEY_TABLE[2];
@@ -19,10 +18,6 @@ MmlParser.KEY_TABLE = [
   [ 0,-1, 0, 0, 0, 0, 0], // F
   [ 0, 0, 0, 0, 0,+1, 0]  // G
 ];
-
-MmlParser.prototype.addToken = function (tokenStart) {
-  return this.tokens.push(tokenStart, this.scanner.spans.length - 1) / 2 - 1;
-};
 
 MmlParser.prototype.getInt = function () {
   var ch = this.scanner.next(), d = 0;
@@ -94,7 +89,7 @@ MmlParser.prototype.tryTie = function (note) {
   }
 };
 
-MmlParser.prototype.addNote = function (note) {
+MmlParser.prototype.addNote = function (note, tokenStart) {
   var last = this.current.notes[this.current.notes.length - 1];
   note.chord = this.current.chordMode;
   if (this.current.chordMode) {
@@ -127,6 +122,8 @@ MmlParser.prototype.addNote = function (note) {
     note.tieBefore = p;
   }
   this.current.notes.push(note);
+  note.tokenId = this.scanner.addToken(tokenStart);
+  return note;
 };
 
 MmlParser.prototype.readNote = function (abc) {
@@ -146,9 +143,8 @@ MmlParser.prototype.readNote = function (abc) {
   }
   this.scanner.accept("duration");
   var note = new MMLNote(ptc, du, dot);
-  note.tokenId = this.addToken(tokenStart);
   note.volume = this.current.volume;
-  this.addNote(note);
+  return this.addNote(note, tokenStart);
 };
 
 MmlParser.prototype.readRest = function () {
@@ -161,8 +157,7 @@ MmlParser.prototype.readRest = function () {
   }
   this.scanner.accept("duration");
   var note = new MMLNote("rest", du, dot);
-  note.tokenId = this.addToken(tokenStart);
-  this.addNote(note);
+  return this.addNote(note, tokenStart);
 };
 
 MmlParser.prototype.readN = function () {
@@ -172,9 +167,8 @@ MmlParser.prototype.readN = function () {
   if (dot === 0) dot = this.current.dots;
   this.scanner.accept("duration");
   var note = new MMLNote(pitch, this.current.duration, dot);
-  note.tokenId = this.addToken(tokenStart);
   note.volume = this.current.volume;
-  this.addNote(note);
+  return this.addNote(note, tokenStart);
 };
 
 MmlParser.prototype.readDuration = function () {
@@ -319,5 +313,16 @@ MmlParser.prototype.next = function () {
     default:
       this.scanner.reject();
       return null;
+  }
+};
+
+MmlParser.prototype.nextToken = function () {
+  var n = this.next();
+  if (n) {
+    this.scanner.setPosition(this.current.id, this.current.notes.length - 1);
+  }
+  else if (n === void undefined) {
+    this.scanner.addToken(this.scanner.spans.length);
+    this.scanner.setPosition(this.current.id, this.current.notes.length);
   }
 };

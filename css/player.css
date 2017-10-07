@@ -49,3 +49,7 @@ span.duration {
 span.tie {
   color: green;
 }
+
+.selectable:hover {
+  background-color: yellow;
+}
