@@ -216,6 +216,7 @@ MmlParser.prototype.addTie = function () {
 
 MmlParser.prototype.readMusicFeel = function () {
   var ch = this.scanner.next();
+  var lastPos = this.scanner.lastPos;
   var mml = false;
   if (ch === "M" || ch === "m") {
     ch = this.scanner.next();
@@ -229,7 +230,10 @@ MmlParser.prototype.readMusicFeel = function () {
     }
   }
   if (!mml) {
+    this.scanner.lastPos = lastPos;
+    this.scanner.rewind();
     this.scanner.reject();
+    return null;
   }
 };
 

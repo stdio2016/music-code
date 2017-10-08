@@ -21,12 +21,12 @@ function note(pitch,start){
 function noteOff(state, end, onended) {
   var src = state.src, env = state.env;
   var endtime = currentTime + end;
-  env.gain.setValueAtTime(1, endtime);
-  env.gain.linearRampToValueAtTime(0, endtime + 0.05);
+  env.gain.setValueAtTime(1, endtime - 0.05);
+  env.gain.linearRampToValueAtTime(0, endtime);
   if(src.stop)
-    src.stop(endtime + 0.05);
+    src.stop(endtime);
   else {
-    src.noteOff(endTime + 0.05);
+    src.noteOff(endTime);
   }
   src.onended = onended;
 }

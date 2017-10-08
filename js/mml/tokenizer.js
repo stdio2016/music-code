@@ -46,22 +46,6 @@ MmlTokenizer.prototype.accept = function (type) {
   return this.spans.length;
 };
 
-// private!
-MmlTokenizer.prototype.addSpace = function (tok) {
-  for (var i=1; i<tok.length; i++) {
-    if (tok[i].length === 0) continue;
-    if (tok[i][0] === ";") {
-      this.spans.push({str: tok[i], type: 'comment'});
-    }
-    else if (tok[i] === "\n") {
-      this.spans.push({str: tok[i], type: 'newline'});
-    }
-    else {
-      this.spans.push({str: tok[i], type: 'space'});
-    }
-  }
-};
-
 MmlTokenizer.prototype.addToken = function (startPos) {
   if (startPos < this.spans.length) {
     var group = this.spans.splice(startPos - 1, this.spans.length - startPos + 1);
@@ -83,25 +67,12 @@ MmlTokenizer.prototype.setPosition = function (partId, noteIndex) {
 };
 
 MmlTokenizer.prototype.toHTML = function () {
+  function myonclick(e) {
+    var t = e.target;
+    alertBox("part "+ t.dataset.partId +" note "+ t.dataset.noteIndex);
+  }
   var doc = document.createDocumentFragment();
   var line = document.createElement('div');
-  /*var has = false;
-  for (var i = 0; i < this.spans.length; i++) {
-    var tok = this.spans[i];
-    if (tok.type === "newline") {
-      doc.appendChild(line);
-      line = document.createElement('div');
-    }
-    else {
-      var span = document.createElement('span');
-      span.className = tok.type;
-      span.textContent = tok.str;
-      line.appendChild(span);
-      has = true;
-    }
-  }
-  if (has)
-    doc.appendChild(line);*/
   var pos = 0;
   for (var i = 0; i < this.spans.length; i++) {
     var tok = this.spans[i];
@@ -112,6 +83,9 @@ MmlTokenizer.prototype.toHTML = function () {
     var span = document.createElement('span');
     span.className = tok.type;
     span.textContent = this.data.slice(tok.pos, tok.to);
+    span.dataset.partId = tok.partId;
+    span.dataset.noteIndex = tok.noteIndex;
+    span.onclick = myonclick;
     doc.appendChild(span);
     pos = tok.to;
   }
