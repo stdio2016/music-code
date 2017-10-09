@@ -66,10 +66,13 @@ MmlTokenizer.prototype.setPosition = function (partId, noteIndex) {
   span.noteIndex = noteIndex;
 };
 
-MmlTokenizer.prototype.toHTML = function () {
+MmlTokenizer.prototype.toHTML = function (tracks) {
   function myonclick(e) {
     var t = e.target;
-    alertBox("part "+ t.dataset.partId +" note "+ t.dataset.noteIndex);
+    var note = tracks[t.dataset.partId].notes[t.dataset.noteIndex] || "N/A";
+    alertBox("part "+ t.dataset.partId +" note "+ t.dataset.noteIndex + "\n" +
+      note + "\n" + "startPos: " + note.startPos + " endPos: " + note.endPos
+    );
   }
   var doc = document.createDocumentFragment();
   var line = document.createElement('div');
@@ -85,7 +88,9 @@ MmlTokenizer.prototype.toHTML = function () {
     span.textContent = this.data.slice(tok.pos, tok.to);
     span.dataset.partId = tok.partId;
     span.dataset.noteIndex = tok.noteIndex;
-    span.onclick = myonclick;
+    if (tok.type !== "invalid") {
+      span.onclick = myonclick;
+    }
     doc.appendChild(span);
     pos = tok.to;
   }

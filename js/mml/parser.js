@@ -95,17 +95,15 @@ MmlParser.prototype.addNote = function (note, tokenStart) {
   if (this.current.chordMode) {
     this.current.chordMode = false;
     note.startPos = last.startPos;
+    this.current.pos = note.endPos = last.endPos;
   }
   else {
     this.current.tiedNotes = this.current.tyingNotes;
     this.current.tyingNotes = new Map();
-    if (last) {
-      var du = 1 / last.duration * (2 - Math.pow(0.5, last.dots));
-      note.startPos = last.startPos + du;
-    }
-    else {
-      note.startPos = 0;
-    }
+    note.startPos = this.current.pos;
+    var du = 1 / note.duration * (2 - Math.pow(0.5, note.dots));
+    this.current.pos += du;
+    note.endPos = this.current.pos;
   }
   var ch = this.scanner.next();
   if (ch === "~") {
@@ -257,6 +255,8 @@ MmlParser.prototype.chordOn = function () {
   if (this.current.notes.length > 0) {
     this.current.chordMode = true;
     this.scanner.accept('instruction');
+    var last = this.current.notes[this.current.notes.length - 1];
+    this.current.pos = last.startPos;
   }
   else {
     this.scanner.reject();
