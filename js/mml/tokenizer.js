@@ -88,7 +88,7 @@ MmlTokenizer.prototype.toHTML = function (tracks) {
     span.textContent = this.data.slice(tok.pos, tok.to);
     span.dataset.partId = tok.partId;
     span.dataset.noteIndex = tok.noteIndex;
-    if (tok.type !== "invalid") {
+    if (tok.type !== "invalid" && tok.type !== "comment") {
       span.onclick = myonclick;
     }
     doc.appendChild(span);

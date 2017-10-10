@@ -269,6 +269,15 @@ MmlParser.prototype.setVolume = function (num) {
   this.scanner.accept('instruction');
 };
 
+MmlParser.prototype.skipComment = function () {
+  var s = this.scanner;
+  do {
+    ch = s.data.charAt(s.pos++);
+  } while (ch !== "" && !s.isNewline(ch)) ;
+  s.accept("comment");
+  return null;
+};
+
 MmlParser.prototype.next = function () {
   var ch = this.scanner.next();
   var num;
@@ -314,6 +323,8 @@ MmlParser.prototype.next = function () {
       return this.switchPart(num);
     case '/':
       return this.chordOn();
+    case ';':
+      return this.skipComment();
     default:
       this.scanner.reject();
       return null;
