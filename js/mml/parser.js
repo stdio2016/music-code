@@ -341,3 +341,37 @@ MmlParser.prototype.nextToken = function () {
     this.scanner.setPosition(this.current.id, this.current.notes.length);
   }
 };
+
+MmlParser.prototype.assemble = function () {
+  this.tempos.sort(function (a, b) {
+    return a.position - b.position;
+  });
+  var result = [];
+  for (var i in this.parts) {
+    var p = this.parts[i];
+    var idx = 0;
+    var tempo = 120;
+    var shift = 0;
+    var time = 0;
+    var t = 0;
+    for (var j = 0; j < p.notes.length; j++) {
+      var n = p.notes[j];
+      while (idx < this.tempos.length && this.tempos[idx].position < n.endPos) {
+        time += 60 * 4 / tempo * (this.tempos[idx].position - shift);
+        tempo = this.tempos[idx].bpm;
+        shift = this.tempos[idx].position;
+        idx++;
+      }
+      n.startPos = t;
+      n.endPos = time + 60 * 4 / tempo * (n.endPos - shift);
+      while (j + 1 < p.length && p.notes[j+1].chord) {
+        j++;
+        p.notes[j].startPos = t;
+        p.notes[j].endPos = n.endPos;
+      }
+      t = n.endPos;
+    }
+    result.push(new MmlPlayer(p));
+  }
+  return result;
+};
