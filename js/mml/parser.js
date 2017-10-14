@@ -364,7 +364,7 @@ MmlParser.prototype.assemble = function () {
       }
       n.startPos = t;
       n.endPos = time + 60 * 4 / tempo * (n.endPos - shift);
-      while (j + 1 < p.length && p.notes[j+1].chord) {
+      while (j + 1 < p.notes.length && p.notes[j+1].chord) {
         j++;
         p.notes[j].startPos = t;
         p.notes[j].endPos = n.endPos;
