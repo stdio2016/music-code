@@ -7,13 +7,12 @@
 <script src='js/sound.js'></script>
 <script src='js/playerTrack.js'></script>
 <script src='js/player.js'></script>
-<script src='js/parser.js'></script>
 <script src='js/masciiParser.js'></script>
-<script src='js/assembler.js'></script>
-<script src='js/mml/tokenizer.js'></script>
-<script src='js/mml/parser.js'></script>
+<script src='js/mml/MMLNote.js'></script>
+<script src='js/mml/MMLPart.js'></script>
+<script src='js/mml/MMLParser.js'></script>
 <script src='js/mml/player.js'></script>
-<script type="text/javascript" src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"></script>
+<script src='js/CodeView.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 <link rel='stylesheet' href='css/alertbox.css'>
 </head>
@@ -111,18 +110,13 @@ function gotoMode(mode){
   if(mode == "play"){
     divPlayMode.style.display = "";
     
-    dd = new MmlParser(codeIn.value);
-    while (dd.scanner.pos < dd.scanner.data.length) {
-      try {
-        dd.nextToken();
-      } catch (t) {
-        console.error(t);
-      }
-    }
+    dd = new MMLParser(codeIn.value);
+    dd.parse();
     while (codeOut.hasChildNodes()) codeOut.removeChild(codeOut.lastChild);
-    codeOut.appendChild(dd.scanner.toHTML(dd.parts));
-    player = dd.assemble();
-    togglePlayPause();
+    //codeOut.appendChild(dd.scanner.toHTML(dd.parts));
+    //player = dd.assemble();
+    //togglePlayPause();
+    codeOut.innerHTML = dd.view.html;
   }
   if(mode == "edit"){
     divEditMode.style.display = "";
