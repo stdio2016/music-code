@@ -27,7 +27,7 @@ span.invalid {
 }
 
 span.octave {
-  color: #5c4;
+  color: #5a4;
 }
 
 span.instruction{
@@ -35,7 +35,7 @@ span.instruction{
 }
 
 span.note {
-  color: brown;
+  color: black;
 }
 
 span.note-n {

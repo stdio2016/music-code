@@ -103,8 +103,10 @@ MMLParser.prototype.addNote = function (note) {
   if (part.chordMode) {
     part.chordMode = false;
     part.octave = part.savedOctave;
+    note.startTime = part.notes[part.notes.length - 1].startTime;
   }
   else {
+    note.startTime = part.pos;
     part.pos += 1 / note.duration * (2 - Math.pow(0.5, note.dots));
   }
   part.tieMode = false;
@@ -188,7 +190,7 @@ MMLParser.prototype.readDuration = function () {
   var dot = this.getDot();
   this.current.duration = du;
   this.current.dots = dot;
-  this.addToken("instruction");
+  this.addToken("duration");
 };
 
 MMLParser.prototype.setOctave = function (num) {

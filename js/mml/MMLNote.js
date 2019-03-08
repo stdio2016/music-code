@@ -18,6 +18,7 @@ function MMLNote(pitch, duration, dots) {
   this.chord = false; // this note is part of a chord
   this.duration = duration;
   this.dots = dots; // dot count, can be either 0 or 1
+  this.startTime = 0;
 }
 
 MMLNote.prototype.toString = function () {
