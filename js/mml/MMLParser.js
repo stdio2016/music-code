@@ -183,10 +183,11 @@ MMLParser.prototype.readN = function () {
 
 MMLParser.prototype.readDuration = function () {
   var du = this.getInt(3);
-  if (!du) {
+  if (!du || du == 0) {
     this.addToken("invalid");
     return;
   }
+  if (this.compatMode && du > 64) du = 64;
   var dot = this.getDot();
   this.current.duration = du;
   this.current.dots = dot;
@@ -196,6 +197,7 @@ MMLParser.prototype.readDuration = function () {
 MMLParser.prototype.setOctave = function (num) {
   if (num > 9) num = 9;
   if (num < -1) num = -1;
+  if (this.compatMode) num = Math.min(Math.max(num, 1), 8);
   this.current.octave = num;
   this.addToken("octave");
 };
@@ -207,10 +209,13 @@ MMLParser.prototype.switchPart = function (num) {
   else {
     this.current = this.parts[num] = new MMLPart(num);
   }
-  this.addToken('instruction');
 };
 
 MMLParser.prototype.setTempo = function (num) {
+  if (this.compatMode)
+    num = Math.min(Math.max(num, 32), 255);
+  else
+    num = Math.min(Math.max(num, 20), 1000);
   this.tempos.push({position: this.current.pos, bpm: num});
   this.addToken('instruction');
 };
@@ -274,7 +279,10 @@ MMLParser.prototype.setVolume = function (num) {
 
 MMLParser.prototype.skipComment = function () {
   var ch, pos = this.pos-1;
-  this.compatMode = false;
+  if (this.compatMode) {
+    this.switchPart(this.current.id + 1);
+    this.compatMode = false;
+  }
   do {
     ch = this.code.charAt(this.pos++);
   } while (ch !== "" && ch !== '\n') ;
@@ -306,8 +314,10 @@ MMLParser.prototype.next = function () {
     case 'A': case 'B': // /[A-G][+#-@]*\d*\.?~?
       this.readNote(ch.toUpperCase()); break;
     case ',': case '<':
-      if (this.compatMode && ch == ',')
+      if (this.compatMode && ch == ',') {
         this.switchPart(this.current.id + 1);
+        this.addToken('instruction');
+      }
       else
         this.setOctave(this.current.octave - 1);
       break;
@@ -329,14 +339,15 @@ MMLParser.prototype.next = function () {
       this.skipSpace();
       num = this.getInt(3);
       if (num == null) { this.addToken("invalid"); break; }
-      num = (num+1) / (this.compatMode ? 16 : 128);
+      num = (num+1) / (this.compatMode ? 15 : 127);
+      if (num > 1) num = 1;
       this.setVolume(num);
       break;
     case 'T': // /T\d*(\.\d*)?/
       this.skipSpace();
       num = this.getFloat(4);
       if (num === null || this.current.chordMode) { this.addToken("invalid"); break; }
-      this.setTempo(Math.min(Math.max(num, 20), 1000));
+      this.setTempo(num);
       break;
     case 'N': // /N\d*\.?~?/
       this.readN(); break;
@@ -352,6 +363,7 @@ MMLParser.prototype.next = function () {
       num = this.getInt(3);
       if (num === null) { this.addToken("invalid"); break; }
       this.switchPart(num);
+      this.addToken('instruction');
       break;
     case '/':
       this.chordOn(); break;
@@ -370,4 +382,11 @@ MMLParser.prototype.parse = function () {
   do {
     this.next();
   } while (this.pos < this.code.length);
+  this.tempos.sort(function (a, b) {
+    if (a.position < b.position) return -1;
+    if (a.position > b.position) return 1;
+    return 0;
+  });
+  // default tempo
+  this.tempos.unshift({position: 0, bpm: 120});
 };
