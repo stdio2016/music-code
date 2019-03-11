@@ -3,6 +3,10 @@ var master = actx.createGain();
 master.gain.value = 0.5;
 master.connect(actx.destination);
 
+var stoppedSound = actx.createGain();
+stoppedSound.gain.value = 1e-5;
+stoppedSound.connect(actx.destination);
+
 // for iOS only
 var unlocked = false;
 function unlock(){

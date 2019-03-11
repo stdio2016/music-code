@@ -11,7 +11,7 @@
 <script src='js/mml/MMLNote.js'></script>
 <script src='js/mml/MMLPart.js'></script>
 <script src='js/mml/MMLParser.js'></script>
-<script src='js/mml/player.js'></script>
+<script src='js/mml/MMLPlayer.js'></script>
 <script src='js/CodeView.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 <link rel='stylesheet' href='css/alertbox.css'>
@@ -114,7 +114,15 @@ function gotoMode(mode){
     dd.parse();
     while (codeOut.hasChildNodes()) codeOut.removeChild(codeOut.lastChild);
     //codeOut.appendChild(dd.scanner.toHTML(dd.parts));
-    //player = dd.assemble();
+    player = [];
+    for (var i in dd.parts) {
+      player.push(new MMLPlayer(dd.parts[i]));
+    }
+    player.forEach(function (x) {
+      x.onended = function () {
+        console.log('end');
+      };
+    });
     //togglePlayPause();
     codeOut.innerHTML = dd.view.html;
   }

@@ -104,10 +104,12 @@ MMLParser.prototype.addNote = function (note) {
     part.chordMode = false;
     part.octave = part.savedOctave;
     note.startTime = part.notes[part.notes.length - 1].startTime;
+    note.endTime = part.pos;
   }
   else {
     note.startTime = part.pos;
     part.pos += 1 / note.duration * (2 - Math.pow(0.5, note.dots));
+    note.endTime = part.pos;
   }
   part.tieMode = false;
   part.notes.push(note);
@@ -339,7 +341,7 @@ MMLParser.prototype.next = function () {
       this.skipSpace();
       num = this.getInt(3);
       if (num == null) { this.addToken("invalid"); break; }
-      num = (num+1) / (this.compatMode ? 15 : 127);
+      num = num / (this.compatMode ? 15 : 127);
       if (num > 1) num = 1;
       this.setVolume(num);
       break;
@@ -389,4 +391,10 @@ MMLParser.prototype.parse = function () {
   });
   // default tempo
   this.tempos.unshift({position: 0, bpm: 120});
+  for (var i in this.parts) {
+    // sounds fun!
+    //this.parts[i].makeOfftune();
+    this.parts[i].connectTie();
+    this.parts[i].setTempo(this.tempos);
+  }
 };
