@@ -87,15 +87,18 @@ MMLParser.prototype.skipSpace = function () {
   this.pos--;
 };
 
-MMLParser.prototype.addToken = function (type) {
+MMLParser.prototype.addToken = function (type, endNote) {
   var i = this.pos - 1;
   var from = this.tokenPos;
   while (i > from && (this.code[i] == ' ' || this.code[i] == '\t')) {
     i--;
   }
   this.view.addToken(this.code.slice(from, i+1), type);
+  var id;
+  if (endNote) id = this.view.endNote();
   this.view.addText(this.code.slice(i+1, this.pos));
   this.tokenPos = this.pos;
+  if (endNote) return id;
 };
 
 MMLParser.prototype.addNote = function (note) {
@@ -138,8 +141,7 @@ MMLParser.prototype.readNote = function (abc) {
   }
   note.volume = this.current.volume;
   note.chord = this.current.chordMode;
-  this.addToken("note");
-  note.source = this.view.endNote();
+  note.source = this.addToken("note", true);
   this.addNote(note);
 };
 
@@ -154,9 +156,8 @@ MMLParser.prototype.readRest = function () {
     du = this.current.duration;
     if (dot === 0) dot = this.current.dots;
   }
-  this.addToken("note");
   var note = new MMLNote("rest", du, dot);
-  note.source = this.view.endNote();
+  note.source = this.addToken("note", true);
   this.addNote(note);
 };
 
@@ -167,7 +168,7 @@ MMLParser.prototype.readN = function () {
     return;
   }
   this.view.beginNote();
-  pitch = Math.min(pitch + 12, 127); // 0 to 127
+  pitch = Math.min(pitch + 12 + this.transpose, 127); // 0 to 127
   var dot = this.getDot();
   if (dot === 0) dot = this.current.dots;
   var note = new MMLNote(pitch, this.current.duration, dot);
@@ -178,8 +179,7 @@ MMLParser.prototype.readN = function () {
   }
   note.volume = this.current.volume;
   note.chord = this.current.chordMode;
-  this.addToken("note-n");
-  note.source = this.view.endNote();
+  note.source = this.addToken("note-n", true);
   this.addNote(note);
 };
 

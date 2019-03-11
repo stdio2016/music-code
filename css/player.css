@@ -50,6 +50,16 @@ span.tie {
   color: green;
 }
 
+.selectable.playing {
+  background-color: palegreen;
+}
+.selectable.cursor {
+  background-color: gray;
+}
+.selectable.cursor.playing {
+  background-color: yellow;
+}
+
 .selectable:hover {
   background-color: yellow;
 }

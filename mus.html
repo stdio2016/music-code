@@ -104,10 +104,12 @@ This website does not support IE. Please use Firefox or Chrome.
 <!-- end of alert box -->
 
 <script>
+var player;
 function gotoMode(mode){
   divPlayMode.style.display = "none";
   divEditMode.style.display = "none";
   if(mode == "play"){
+    if (player) stopMusic();
     divPlayMode.style.display = "";
     
     dd = new MMLParser(codeIn.value);
@@ -116,10 +118,12 @@ function gotoMode(mode){
     //codeOut.appendChild(dd.scanner.toHTML(dd.parts));
     player = [];
     for (var i in dd.parts) {
-      player.push(new MMLPlayer(dd.parts[i]));
+      var p = new MMLPlayer(dd.parts[i]);
+      p.view = dd.view;
+      player.push(p);
     }
     //togglePlayPause();
-    codeOut.innerHTML = dd.view.html;
+    codeOut.appendChild(dd.view.toHTML());
   }
   if(mode == "edit"){
     divEditMode.style.display = "";
@@ -148,10 +152,13 @@ function togglePlayPause(){
   else {
     btnPlayPause.value = "Pause";
     setTimeout(function(){
+      isPlaying = 0;
       for (var i = 0; i < player.length; i++) {
         player[i].onended = function () {
           isPlaying--;
+          this.finished = true;
           if (isPlaying <= 0) {
+            stopMusic();
             if (chkLoopMusic.checked) {
               togglePlayPause();
             }
@@ -160,16 +167,19 @@ function togglePlayPause(){
             }
           }
         };
-        player[i].play();
+        if (!player[i].finished) isPlaying++;
+      }
+      for (var i = 0; i < player.length; i++) {
+        if (!player[i].finished) player[i].play();
       }
     }, 50);
-    isPlaying = player.length;
   }
 }
 function stopMusic() {
   for (var i = 0; i < player.length; i++) {
     player[i].onended = null;
     player[i].stop();
+    player[i].finished = false;
   }
   isPlaying = 0;
   btnPlayPause.value = "Play";
