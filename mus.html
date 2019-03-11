@@ -118,11 +118,6 @@ function gotoMode(mode){
     for (var i in dd.parts) {
       player.push(new MMLPlayer(dd.parts[i]));
     }
-    player.forEach(function (x) {
-      x.onended = function () {
-        console.log('end');
-      };
-    });
     //togglePlayPause();
     codeOut.innerHTML = dd.view.html;
   }
@@ -141,26 +136,43 @@ function toggleCode(){
     btnToggleCode.value = "Show";
   }
 }
-var isPlaying = false;
+var isPlaying = 0;
 function togglePlayPause(){
   if (isPlaying) {
     btnPlayPause.value = "Play";
-    isPlaying = false;
+    for (var i = 0; i < player.length; i++) {
+      player[i].pause();
+    }
+    isPlaying = 0;
   }
   else {
     btnPlayPause.value = "Pause";
     setTimeout(function(){
       for (var i = 0; i < player.length; i++) {
+        player[i].onended = function () {
+          isPlaying--;
+          if (isPlaying <= 0) {
+            if (chkLoopMusic.checked) {
+              togglePlayPause();
+            }
+            else {
+              btnPlayPause.value = "Play";
+            }
+          }
+        };
         player[i].play();
       }
     }, 50);
-    isPlaying = true;
+    isPlaying = player.length;
   }
 }
 function stopMusic() {
   for (var i = 0; i < player.length; i++) {
+    player[i].onended = null;
     player[i].stop();
   }
+  isPlaying = 0;
+  btnPlayPause.value = "Play";
 }
 </script>
 </body>

@@ -11,54 +11,74 @@ function MMLPlayer(part) {
 
 MMLPlayer.prototype.play = function () {
   if (this.playId) return ;
-  this.startTime = actx.currentTime;
-  this.playSmallSegment(4);
+  this.startTime = actx.currentTime - this.playTime;
+  var i = 0;
+  while (i < this.notes.length && this.notes[i].endTime <= this.playTime) {
+    i++;
+  }
+  this.playPos = i;
+  this.playSmallSegment(this.playTime + 4, true);
   this.playTimeout();
+};
+
+MMLPlayer.prototype.stopSound = function () {
+  clearTimeout(this.playId);
+  this.playId = 0;
+  for (var i in this.sounds) {
+    var e = this.sounds[i];
+    try {
+      e.src.stop();
+    }
+    catch (x) {
+      e.src.disconnect();
+      e.src.connect(stoppedSound);
+    }
+  }
+  this.sounds = {};
 };
 
 MMLPlayer.prototype.stop = function () {
   if (this.playId) {
-    clearTimeout(this.playId);
-    this.playId = 0;
-    for (var i in this.sounds) {
-      var e = this.sounds[i];
-      try {
-        e.src.stop();
-      }
-      catch (x) {
-        e.src.disconnect();
-        e.src.connect(stoppedSound);
-      }
-    }
-    this.sounds = {};
+    this.stopSound();
+    this.playTime = 0;
     if (this.onended) this.onended();
   }
-  this.playPos = 0;
+  else {
+    this.playTime = 0;
+  }
+};
+
+MMLPlayer.prototype.pause = function () {
+  if (this.playId) {
+    this.stopSound();
+    this.playTime = actx.currentTime - this.startTime;
+  }
 };
 
 MMLPlayer.prototype.playTimeout = function () {
   var me = this;
   if (me.playPos < me.notes.length) {
     me.playId = setTimeout(function () {
-      me.playSmallSegment(actx.currentTime - me.startTime + 4);
+      me.playSmallSegment(actx.currentTime - me.startTime + 4, false);
       me.playTimeout();
     }, 2000);
   }
   else {
     me.playId = setTimeout(function () {
       me.playId = 0;
-      me.playPos = 0;
+      me.playTime = 0;
       if (me.onended) me.onended();
     }, (me.startTime + me.duration - actx.currentTime) * 1000);
   }
 };
 
-MMLPlayer.prototype.playSmallSegment = function (to) {
+MMLPlayer.prototype.playSmallSegment = function (to, first) {
   var notes = this.notes;
   for (var i = this.playPos; i < notes.length; i++) {
     var n = notes[i];
     if (n.startTime > to) break;
-    if (n.tieBefore || n.type === "rest") continue;
+    if (first && n.tieBefore) continue;
+    if (n.type === "rest") continue;
     this.playSound(n, i);
   }
   this.playPos = i;
