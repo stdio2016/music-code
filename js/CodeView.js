@@ -2,9 +2,11 @@ function CodeView() {
   this.elements = [];
   this.currentNote = null;
   this.notes = [];
+  this.errors = 0;
 }
 
 CodeView.prototype.addToken = function (token, type) {
+  if (type === "invalid") this.errors++;
   if (this.currentNote) {
     this.currentNote.code += "<span class="+type+">" + safeInnerHTML(token) + "</span>";
   }

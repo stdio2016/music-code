@@ -163,7 +163,7 @@ MMLParser.prototype.readRest = function () {
 
 MMLParser.prototype.readN = function () {
   var pitch = this.getInt(3);
-  if (!pitch) {
+  if (pitch === null) {
     this.addToken("invalid");
     return;
   }
