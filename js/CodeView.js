@@ -44,13 +44,19 @@ CodeView.prototype.endNote = function () {
 
 CodeView.prototype.toHTML = function () {
   var div = document.createElement('div');
-  var lin = document.createElement('span');
+  var lin = document.createElement('div');
+  lin.className = 'line';
   for (var i = 0; i < this.elements.length; i++) {
     var e = this.elements[i];
     if (e.newline) {
-      div.appendChild(lin);
-      div.appendChild(document.createElement('br'));
-      lin = document.createElement('span');
+      if (lin.childNodes.length == 0) {
+        div.appendChild(document.createElement('br'));
+      }
+      else {
+        div.appendChild(lin);
+      }
+      lin = document.createElement('div');
+      lin.className = 'line';
     }
     else if (e.type) {
       var ee = document.createElement('span');
