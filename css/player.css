@@ -50,6 +50,9 @@ span.normal {
   color: orange;
 }
 
+.mcp-decoration {
+  color: tomato;
+}
 
 span.tie {
   color: green;

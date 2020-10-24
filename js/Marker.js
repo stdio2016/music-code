@@ -17,11 +17,18 @@ Marker.prototype.noteEnd = function () {
 
 Marker.prototype.markTo = function (name, pos) {
   if (pos > this.pos) {
-    this.tokens.push({
-      type: 0,
-      name: name,
-      text: this.text.substring(this.pos, pos)
-    });
+    // if the name of previous token is the same, merge it with current token
+    var n = this.tokens.length;
+    if (n > 0 && this.tokens[n-1].name === name) {
+      this.tokens[n-1].text += this.text.substring(this.pos, pos);
+    }
+    else {
+      this.tokens.push({
+        type: 0,
+        name: name,
+        text: this.text.substring(this.pos, pos)
+      });
+    }
     this.pos = pos;
   }
 };
