@@ -16,35 +16,40 @@ span.normal {
   color: black;
 }
 
-span.comment {
+.mcp-comment {
   color: gray;
   font-style: italic;
 }
 
-span.invalid {
+.mcp-error {
   color: white;
   background-color: red;
 }
 
-span.octave {
+.mcp-octave {
   color: #5a4;
 }
 
-span.instruction{
+.mcp-instruction{
   color: blue;
 }
 
-span.note {
+.mcp-note {
   color: black;
 }
 
-span.note-n {
+.mcp-note-n {
   color: magenta;
 }
 
-span.duration {
+.mcp-duration {
+  color: darkmagenta;
+}
+
+.mcp-duration-instruction {
   color: orange;
 }
+
 
 span.tie {
   color: green;

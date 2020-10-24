@@ -10,7 +10,7 @@
 <script src='js/mml/MMLPart.js'></script>
 <script src='js/mml/MMLParser.js'></script>
 <script src='js/mml/MMLPlayer.js'></script>
-<script src='js/CodeView.js'></script>
+<script src='js/Marker.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 <link rel='stylesheet' href='css/alertbox.css'>
 </head>
@@ -121,7 +121,7 @@ function gotoMode(mode){
       player.push(p);
     }
     //togglePlayPause();
-    codeOut.appendChild(dd.view.toHTML());
+    codeOut.appendChild(dd.marker.toHTML());
   }
   if(mode == "edit"){
     divEditMode.style.display = "";
