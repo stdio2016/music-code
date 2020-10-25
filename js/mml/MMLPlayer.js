@@ -188,17 +188,17 @@ MMLPlayer.prototype.showPlaying = function (to, first) {
 
 MMLPlayer.prototype.showNote = function (n, i) {
   while (n.tieAfter) {
-    this.view.notes[n.source].span.classList.add('playing');
+    //this.view.notes[n.source].span.classList.add('playing');
     n = n.tieAfter;
   }
   this.showingNotes.push(n);
-  this.view.notes[n.source].span.classList.add('playing');
+  //this.view.notes[n.source].span.classList.add('playing');
 };
 
 MMLPlayer.prototype.hideNote = function (n) {
   while (n.tieBefore) {
-    this.view.notes[n.source].span.classList.remove('playing');
+    //this.view.notes[n.source].span.classList.remove('playing');
     n = n.tieBefore;
   }
-  this.view.notes[n.source].span.classList.remove('playing');
+  //this.view.notes[n.source].span.classList.remove('playing');
 };

@@ -6,7 +6,7 @@ function MMLPart(partId) {
   this.notes = []; // array of MMLNotes
   // all of the following are used in MMLAssembler
   this.octave = 4; // current octave
-  this.volume = 0.5; // current volume
+  this.volume = 63; // current volume
   this.duration = 4; // current duration
   this.dots = 0; // current dot count of duration
   this.transpose = 0; // current transpose in semitones
@@ -103,4 +103,21 @@ MMLPart.prototype.setTempo = function (tempo) {
     used++;
   }
   this.pos = t + (this.pos - tempo[used-1].position) * 240 / tempo[used-1].bpm;
+};
+
+MMLPart.prototype.addNote = function (note) {
+  var part = this;
+  if (part.chordMode) {
+    part.chordMode = false;
+    part.octave = part.savedOctave;
+    note.startTime = part.notes[part.notes.length - 1].startTime;
+    note.endTime = part.pos;
+  }
+  else {
+    note.startTime = part.pos;
+    part.pos += 1 / note.duration * (2 - Math.pow(0.5, note.dots));
+    note.endTime = part.pos;
+  }
+  part.tieMode = false;
+  part.notes.push(note);
 };

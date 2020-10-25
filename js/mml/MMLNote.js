@@ -9,6 +9,12 @@ function MMLNote(pitch, duration, dots) {
   }
   else {
     this.type = "note";
+    if (pitch > MMLNote.MAX_PITCH) {
+      pitch = (pitch - 1 - MMLNote.MAX_PITCH) % 12 + MMLNote.MAX_PITCH - 11;
+    }
+    if (pitch < MMLNote.MIN_PITCH) {
+      pitch = MMLNote.MIN_PITCH + 11 - (MMLNote.MIN_PITCH - 1 - pitch) % 12;
+    }
     this.pitch = pitch;
   }
   this.tieBefore = null; // a MMLNote connecting to this note
@@ -21,6 +27,14 @@ function MMLNote(pitch, duration, dots) {
   this.startTime = 0;
   this.endTime = 0;
 }
+
+MMLNote.MAX_DURATION = 128;
+MMLNote.MAX_PITCH = 127;
+MMLNote.MIN_PITCH = 0;
+MMLNote.MAX_OCTAVE = 9;
+MMLNote.MIN_OCTAVE = -1;
+MMLNote.MAX_TEMPO = 999;
+MMLNote.MIN_TEMPO = 20;
 
 MMLNote.prototype.toString = function () {
   if (this.type == "rest") {

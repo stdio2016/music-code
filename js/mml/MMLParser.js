@@ -7,7 +7,23 @@ function MMLParser(code) {
   this.current = new MMLPart(0);
   this.parts = {0: this.current};
   this.tempos = [];
+  this.key = MMLParser.KEY_TABLE[2];
+  this.keyAccidental = 0;
+  this.transpose = 0;
+  this.mmlMode = false;
 }
+
+MMLParser.KEY_TABLE = [
+  //       pitch
+  //A  B  C  D  E  F  G     key
+  [ 0, 0,+1, 0, 0,+1,+1], // A
+  [+1, 0,+1,+1, 0,+1,+1], // B
+  [ 0, 0, 0, 0, 0, 0, 0], // C
+  [ 0, 0,+1, 0, 0,+1, 0], // D
+  [ 0, 0,+1,+1, 0,+1,+1], // E
+  [ 0,-1, 0, 0, 0, 0, 0], // F
+  [ 0, 0, 0, 0, 0,+1, 0]  // G
+];
 
 MMLParser.prototype.next = function () {
   var ch;
@@ -39,7 +55,7 @@ MMLParser.prototype.getAccidental = function (tokenType) {
   }
   this.back();
   if (has) this.markAs(tokenType);
-  return n;
+  return has ? n : null;
 };
 
 MMLParser.prototype.getInt = function (len, tokenType) {
@@ -55,7 +71,7 @@ MMLParser.prototype.getInt = function (len, tokenType) {
     has = true;
   }
   if (has) this.markAs(tokenType);;
-  return n;
+  return has ? n : null;
 };
 
 MMLParser.prototype.getDot = function (tokenType) {
@@ -87,7 +103,20 @@ MMLParser.prototype.readNote = function readNote(ch) {
   var du = this.getInt(3, 'duration');
   var dots = this.getDot('duration');
   var tied = this.getTie('instruction');
+  
+  var pitch = ch.charCodeAt(0)-65;
+  if (accid == null) accid = this.key[pitch] + this.keyAccidental;
+  pitch = [9, 11, 0, 2, 4, 5, 7][pitch] + accid;
+  pitch += 12 * (this.current.octave + 1) + this.transpose;
+  if (du == null || du == 0) {
+    du = this.current.duration;
+    if (dots == 0) dots = this.current.dots;
+  }
+  var note = new MMLNote(pitch, du, dots);
+  note.tieAfter = tied;
+  note.volume = this.current.volume / 127;
   this.marker.noteEnd();
+  this.current.addNote(note);
 };
 
 MMLParser.prototype.readPitchNote = function readPitchNote() {
@@ -96,7 +125,13 @@ MMLParser.prototype.readPitchNote = function readPitchNote() {
   var pitch = this.getInt(3, 'note-n');
   var dots = this.getDot('duration');
   var tied = this.getTie('instruction');
+  
+  if (dots == 0) dots = this.current.dots;
+  var note = new MMLNote(pitch, this.current.duration, dots);
+  note.tieAfter = tied;
+  note.volume = this.current.volume / 127;
   this.marker.noteEnd();
+  this.current.addNote(note);
 };
 
 MMLParser.prototype.readRest = function readRest() {
@@ -104,14 +139,22 @@ MMLParser.prototype.readRest = function readRest() {
   this.markAs('note');
   var du = this.getInt(3, 'duration');
   var dots = this.getDot('duration');
-  var tied = this.getTie('instruction');
+  
+  if (du == null || du == 0) {
+    du = this.current.duration;
+    if (dots == 0) dots = this.current.dots;
+  }
+  var note = new MMLNote('rest', du, dots);
   this.marker.noteEnd();
+  this.current.addNote(note);
 };
 
 MMLParser.prototype.readMusicFeel = function () {
   var pos = this.pos;
-  if (this.next() == 'M' && this.next() == 'L' && this.next() == '@') {
+  if (this.next().toUpperCase() == 'M' && this.next().toUpperCase() == 'L'
+      && this.next() == '@') {
     this.markAs('instruction');
+    this.mmlMode = true;
   }
   else {
     this.pos = pos;
@@ -122,12 +165,41 @@ MMLParser.prototype.readMusicFeel = function () {
 MMLParser.prototype.readKey = function () {
   var key = this.next().toUpperCase();
   if (/[A-G]/.test(key)) {
-    ;
+    this.markAs('instruction');
+    this.key = MMLParser.KEY_TABLE[key.charCodeAt(0)-65];
+    var accid = this.getAccidental('instruction');
+    this.keyAccidental = accid;
   }
-  else this.back();
-  this.markAs('instruction');
-  var accid = this.getAccidental('instruction');
+  else {
+    this.back();
+    var trans = this.getAccidental('instruction');
+    if (trans == null) trans = 0;
+    this.transpose += trans;
+  }
 }
+
+MMLParser.prototype.switchPart = function (num) {
+  if (this.parts[num]) {
+    this.current = this.parts[num];
+  }
+  else {
+    this.current = this.parts[num] = new MMLPart(num);
+  }
+};
+
+MMLParser.prototype.addTie = function () {
+  var part = this.current;
+  var i = part.notes.length - 1;
+  if (i < 0 || part.chordMode || part.tieMode) {
+    return;
+  }
+  while (i >= 0 && part.notes[i].chord) {
+    part.notes[i].tieAfter = true;
+    i--;
+  }
+  part.notes[i].tieAfter = true;
+  part.tieMode = true;
+};
 
 MMLParser.prototype.nextInstruction = function () {
   var ch = this.next().toUpperCase();
@@ -146,6 +218,9 @@ MMLParser.prototype.nextInstruction = function () {
       this.markAs('duration-instruction');
       num = this.getInt(3, 'duration-instruction');
       dots = this.getDot('duration-instruction');
+      if (num == null || num == 0) num = 4;
+      this.current.duration = Math.min(num, MMLNote.MAX_DURATION);
+      this.current.dots = dots;
       break;
     case 'M':
       this.readMusicFeel();
@@ -156,6 +231,8 @@ MMLParser.prototype.nextInstruction = function () {
     case 'O':
       this.markAs('octave');
       num = this.getInt(1, 'octave');
+      if (num == null) num = 4;
+      this.current.octave = num;
       break;
     case 'P': case 'R':
       this.readRest();
@@ -163,38 +240,62 @@ MMLParser.prototype.nextInstruction = function () {
     case 'T':
       this.markAs('instruction');
       num = this.getInt(3, 'instruction');
+      if (num == null) num = 120;
+      num = Math.min(num, MMLNote.MAX_TEMPO);
+      num = Math.max(num, MMLNote.MIN_TEMPO);
+      this.tempos.push({position: this.current.pos, bpm: num});
       break;
     case 'V':
       this.markAs('decoration');
       num = this.getInt(3, 'decoration');
+      if (this.mmlMode) num = num == null ? 63 : Math.min(num, 15) * 8 + 7;
+      else num = num == null ? 63 : Math.min(num, 127);
+      this.current.volume = num;
       break;
     case '!':
       this.markAs('instruction');
       num = this.getInt(3, 'instruction');
+      if (num == null) num = 0;
+      this.switchPart(num);
       break;
     case '&':
       this.markAs('instruction');
+      this.addTie();
       break;
     case "'":
       this.markAs('octave');
+      this.current.octave = Math.min(MMLNote.MAX_OCTAVE, this.current.octave+1);
       break;
     case ',':
-      this.markAs('octave');
+      if (this.mmlMode) {
+        this.markAs('instruction');
+        this.switchPart(this.current.id + 1);
+      }
+      else {
+        this.markAs('octave');
+        this.current.octave = Math.max(MMLNote.MIN_OCTAVE, this.current.octave-1);
+      }
       break;
     case '/':
-      this.markAs('instruction');
+      this.markAs('error');
       break;
     case ';':
       var pos = this.code.indexOf('\n', this.pos);
       if (pos == -1) pos = this.code.length;
       this.pos = pos;
       this.markAs('comment');
+      if (this.mmlMode) {
+        this.mmlMode = false;
+        this.switchPart(this.current.id + 1);
+      }
       break;
     case '<':
       this.markAs('octave');
+      this.current.octave = Math.max(MMLNote.MIN_OCTAVE, this.current.octave-1);
       break;
     case '>':
       this.markAs('octave');
+      this.current.octave = Math.min(MMLNote.MAX_OCTAVE, this.current.octave+1);
       break;
     default:
       this.markAs('error');
