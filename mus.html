@@ -9,19 +9,22 @@
 <script src='js/mml/MMLPart.js'></script>
 <script src='js/mml/MMLParser.js'></script>
 <script src='js/mml/MMLPlayer.js'></script>
+<script src='js/storage.js'></script>
 <script src='js/Marker.js'></script>
 <link rel='stylesheet' href='css/player.css'>
 <link rel='stylesheet' href='css/alertbox.css'>
 </head>
 <body>
 <h1>Music Code Player</h1>
-<p>Select a song: <select id="song" onchange="changeSong()">
+<p>Select a song: <select name="song" onchange="changeSong()">
   <optgroup label="Builtin">
     <option value="bTwinkle">Twinkle Twinkle Little Star</option>
-    <option value="bYee">Yee</option>
-    <option value="bLittleBee">Little Bee</option>
+    <option value="bLittleBee">Hänschen Klein (Little Bee)</option>
+    <option value="bBWV114">Minuet in G Major</option>
   </optgroup>
-  <optgroup label='custom'>
+  <optgroup label='Songs from old mus.html'>
+  </optgroup>
+  <optgroup label='Saved songs'>
     <option value="new">New...</option>
   </optgroup>
 </select></p>
@@ -166,6 +169,7 @@ function togglePlayPause(){
         };
         if (!player[i].finished) isPlaying++;
       }
+      var time = actx.currentTime;
       for (var i = 0; i < player.length; i++) {
         if (!player[i].finished) player[i].play();
       }
@@ -181,6 +185,12 @@ function stopMusic() {
   isPlaying = 0;
   btnPlayPause.value = "Play";
 }
+addEventListener('load',function(){
+  loadSmp('sound/scream.wav', 'scream', {center: 72, loopStart: 0, loopEnd: 12462, attack: 0, release: 0, release2: 0.05});
+  initSongList();
+  changeSong();
+  decodePermalink();
+});
 </script>
 </body>
 </html>
