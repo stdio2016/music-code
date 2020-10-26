@@ -125,7 +125,7 @@ MMLParser.prototype.readPitchNote = function readPitchNote() {
   this.markAs('note-n');
   var pitch = this.getInt(3, 'note-n');
   if (pitch == null) pitch = 48;
-  pitch += 12;
+  pitch += 12 + this.transpose;
   var dots = this.getDot('duration');
   var tied = this.getTie('instruction');
   
@@ -176,6 +176,7 @@ MMLParser.prototype.readKey = function () {
   }
   else {
     this.back();
+    this.markAs('instruction');
     var trans = this.getAccidental('instruction');
     if (trans == null) trans = 0;
     this.transpose += trans;
