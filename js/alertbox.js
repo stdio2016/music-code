@@ -82,10 +82,35 @@ function alertBox(message, callback) {
     }
     input.style.display = 'none';
     box.style.visibility = 'visible';
+    document.getElementById('promptOk').focus();
     document.getElementById('promptCancel').style.display = 'none';
     promptCallback = function (ok) {
         box.style.visibility = 'hidden';
         promptCallback = doesNothing;
         callback();
+    };
+}
+
+function confirmBox(message, callback) {
+    var box = document.getElementById('prompt');
+    var msg = document.getElementById('promptMessage')
+    var input = document.getElementById('promptInput');
+    if (typeof message == 'undefined') {
+        message = '';
+    }
+    msg.innerHTML = safeInnerHTML(message);
+    if (!callback) {
+        callback = function (result) {
+            console.log(result);
+        };
+    }
+    input.style.display = 'none';
+    box.style.visibility = 'visible';
+    document.getElementById('promptOk').focus();
+    document.getElementById('promptCancel').style.display = '';
+    promptCallback = function (ok) {
+        box.style.visibility = 'hidden';
+        promptCallback = doesNothing;
+        callback(ok);
     };
 }

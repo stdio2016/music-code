@@ -29,6 +29,7 @@ function initSongList(){
   }
   else if (name) {
     songList.value = name;
+    if (songList.value == '') songList.value = 'bTwinkle';
   }
   //if(name) {
   //  document.getElementById('warn').innerText = "http://stdio2016.github.io/volatile/mus.html"+location.hash;
@@ -64,7 +65,9 @@ function changeSong(){
     code = songs[name.substr(1)].code;
   }
   else if (name == 'perma'){
-    code = decodePermalink();
+    var cp = decodePermalink();
+    code = cp.code;
+    document.getElementById('format').value = cp.lang;
   }
   if (name != sessionStorage.musicCode_ShowPermaLink) {
     sessionStorage.musicCode_ShowPermaLink = '';
@@ -73,54 +76,60 @@ function changeSong(){
 }
 
 function save(){
+  var elt = event.target;
   var songSelect = document.getElementsByName('song')[0];
   var name = songSelect.value;
   var newName = "";
   if (name.charAt(0) == 'c' || name.charAt(0) == 'd'){
-    newName = prompt('Input the song name', name.substring(1));
+    promptBox('Input the song name', name.substring(1), afterGetName);
   }
   else {
-    newName = prompt('Input the song name');
+    promptBox('Input the song name', '', afterGetName);
   }
-  if(!newName) return;
-  encodePermalink('d' + newName);
-  if(newName == '') return;
-  if(!songs[newName]){
-    var opt = new Option(newName, "d" + newName);
-    songSelect.children[2].appendChild(opt);
-    opt.selected = true;
+  function afterGetName(newName) {
+    if(!newName) return;
+    encodePermalink('d' + newName);
+    if(newName == '') return;
+    if(!songs[newName]){
+      var opt = new Option(newName, "d" + newName);
+      songSelect.children[2].appendChild(opt);
+      opt.selected = true;
+    }
+    songSelect.value = 'd' + newName;
+    songs[newName] = {lang: 'mml', code: document.getElementById('codeIn').value};
+    localStorage.setItem('musicCode_SongList', JSON.stringify(songs));
+    elt.focus();
   }
-  songSelect.value = 'd' + newName;
-  songs[newName] = {lang: 'mml', code: document.getElementById('codeIn').value};
-  localStorage.setItem('musicCode_SongList', JSON.stringify(songs));
 }
 
 function del(){
   var songSelect = document.getElementsByName('song')[0];
   var name = songSelect.value;
   if (name === 'perma') {
-    alert('The song from permalink is permanent');
+    alertBox('The song from permalink is permanent');
     return;
   }
   if (name.charAt(0) != 'd'){
     if (name.charAt(0) == 'c')
-      alert('Old song cannot be deleted by this program.');
+      alertBox('Old song cannot be deleted by this program.');
     else
-      alert('You cannot delete a builtin song');
+      alertBox('You cannot delete a builtin song');
     return;
   }
-  if(!window.confirm('Do you really want to delete "' + name.substring(1) + '"?')){
-    return;
-  }
-  var so = songSelect.children[1];
-  for(var i=0; i<so.children.length; i++){
-    if(so.children[i].value == name){
-      so.children[i].remove();
-      break;
+  confirmBox('Do you really want to delete "' + name.substring(1) + '"?', confirmDeletion);
+  function confirmDeletion(yes) {
+    if (!yes) return;
+    console.log(name);
+    var so = songSelect.children[2];
+    for(var i=0; i<so.children.length; i++){
+      if(so.children[i].value == name){
+        so.children[i].remove();
+        break;
+      }
     }
+    delete songs[name.substr(1)];
+    localStorage.setItem('musicCode_SongList', JSON.stringify(songs));
   }
-  delete songs[name.substr(1)];
-  localStorage.setItem('musicCode_SongList', JSON.stringify(songs));
 }
 
 function encodePermalink(name){
@@ -145,12 +154,16 @@ function encodePermalink(name){
 
 function decodePermalink(){
   var code = location.hash.substr(1);
+  var lang = 'mml';
   var params = code.split('&');
   for (var i = 0; i < params.length; i++) {
     if (params[i].substring(0, 5) == 'code=') {
       code = params[i].substring(5);
     }
+    if (params[i].substring(0, 5) == 'lang=') {
+      lang = params[i].substring(5);
+    }
   }
   code = decodeURIComponent(code);
-  return code;
+  return {code: code, lang: lang};
 }
