@@ -116,7 +116,7 @@ function gotoMode(mode){
     player = [];
     for (var i in dd.parts) {
       var p = new MMLPlayer(dd.parts[i]);
-      p.view = dd.view;
+      p.view = dd.marker;
       player.push(p);
     }
     //togglePlayPause();

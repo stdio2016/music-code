@@ -116,7 +116,7 @@ MMLParser.prototype.readNote = function readNote(ch) {
   note.tieAfter = tied;
   note.volume = this.current.volume / 127;
   note.chord = this.current.chordMode;
-  this.marker.noteEnd();
+  note.source = this.marker.noteEnd();
   this.current.addNote(note);
 };
 
@@ -134,7 +134,7 @@ MMLParser.prototype.readPitchNote = function readPitchNote() {
   note.tieAfter = tied;
   note.volume = this.current.volume / 127;
   note.chord = this.current.chordMode;
-  this.marker.noteEnd();
+  note.source = this.marker.noteEnd();
   this.current.addNote(note);
 };
 
@@ -149,7 +149,7 @@ MMLParser.prototype.readRest = function readRest() {
     if (dots == 0) dots = this.current.dots;
   }
   var note = new MMLNote('rest', du, dots);
-  this.marker.noteEnd();
+  note.source = this.marker.noteEnd();
   this.current.addNote(note);
 };
 

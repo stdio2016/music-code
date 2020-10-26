@@ -65,7 +65,8 @@ MMLPlayer.prototype.pause = function () {
     this.playTime = actx.currentTime - this.startTime;
     this.showTime = this.playTime;
   }
-  this.stopAnimation();
+  cancelAnimationFrame(this.showId);
+  this.showId = 0;
 };
 
 MMLPlayer.prototype.playTimeout = function () {
@@ -92,7 +93,7 @@ MMLPlayer.prototype.playSmallSegment = function (to, first) {
     if (n.startTime > to) break;
     if (i > this.playPos && !n.chord) first = false;
     if (!first && n.tieBefore) continue;
-    if (n.type === "rest") continue;
+    //if (n.type === "rest") continue;
     this.playSound(n, i);
   }
   this.playPos = i;
@@ -179,7 +180,7 @@ MMLPlayer.prototype.showPlaying = function (to, first) {
     if (n.startTime > to) break;
     if (i > this.showPos && !n.chord) first = false;
     if (!first && n.tieBefore) continue;
-    if (n.type === "rest") continue;
+    //if (n.type === "rest") continue;
     this.showNote(n, i);
   }
   this.showPos = i;
@@ -188,17 +189,17 @@ MMLPlayer.prototype.showPlaying = function (to, first) {
 
 MMLPlayer.prototype.showNote = function (n, i) {
   while (n.tieAfter) {
-    //this.view.notes[n.source].span.classList.add('playing');
+    this.view.notes[n.source].span.classList.add('playing');
     n = n.tieAfter;
   }
   this.showingNotes.push(n);
-  //this.view.notes[n.source].span.classList.add('playing');
+  this.view.notes[n.source].span.classList.add('playing');
 };
 
 MMLPlayer.prototype.hideNote = function (n) {
   while (n.tieBefore) {
-    //this.view.notes[n.source].span.classList.remove('playing');
+    this.view.notes[n.source].span.classList.remove('playing');
     n = n.tieBefore;
   }
-  //this.view.notes[n.source].span.classList.remove('playing');
+  this.view.notes[n.source].span.classList.remove('playing');
 };
