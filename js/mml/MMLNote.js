@@ -35,6 +35,7 @@ MMLNote.MAX_OCTAVE = 9;
 MMLNote.MIN_OCTAVE = -1;
 MMLNote.MAX_TEMPO = 999;
 MMLNote.MIN_TEMPO = 20;
+MMLNote.MAX_PART = 999;
 
 MMLNote.prototype.toString = function () {
   if (this.type == "rest") {

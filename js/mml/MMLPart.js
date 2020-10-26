@@ -121,3 +121,12 @@ MMLPart.prototype.addNote = function (note) {
   part.tieMode = false;
   part.notes.push(note);
 };
+
+MMLPart.prototype.chordOn = function () {
+  if (this.notes.length > 0 && !this.chordMode & !this.tieMode) {
+    this.chordMode = true;
+    this.savedOctave = this.octave;
+    return true;
+  }
+  return false;
+};

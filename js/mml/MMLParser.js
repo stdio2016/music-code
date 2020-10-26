@@ -115,6 +115,7 @@ MMLParser.prototype.readNote = function readNote(ch) {
   var note = new MMLNote(pitch, du, dots);
   note.tieAfter = tied;
   note.volume = this.current.volume / 127;
+  note.chord = this.current.chordMode;
   this.marker.noteEnd();
   this.current.addNote(note);
 };
@@ -123,6 +124,8 @@ MMLParser.prototype.readPitchNote = function readPitchNote() {
   this.marker.noteStart();
   this.markAs('note-n');
   var pitch = this.getInt(3, 'note-n');
+  if (pitch == null) pitch = 48;
+  pitch += 12;
   var dots = this.getDot('duration');
   var tied = this.getTie('instruction');
   
@@ -130,6 +133,7 @@ MMLParser.prototype.readPitchNote = function readPitchNote() {
   var note = new MMLNote(pitch, this.current.duration, dots);
   note.tieAfter = tied;
   note.volume = this.current.volume / 127;
+  note.chord = this.current.chordMode;
   this.marker.noteEnd();
   this.current.addNote(note);
 };
@@ -179,6 +183,7 @@ MMLParser.prototype.readKey = function () {
 }
 
 MMLParser.prototype.switchPart = function (num) {
+  if (num > MMLNote.MAX_PART) num = MMLNote.MAX_PART;
   if (this.parts[num]) {
     this.current = this.parts[num];
   }
@@ -277,7 +282,8 @@ MMLParser.prototype.nextInstruction = function () {
       }
       break;
     case '/':
-      this.markAs('error');
+      this.current.chordOn();
+      this.markAs('instruction');
       break;
     case ';':
       var pos = this.code.indexOf('\n', this.pos);
