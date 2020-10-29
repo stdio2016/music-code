@@ -1,4 +1,3 @@
-
 function Marker(text) {
   this.text = text;
   this.pos = 0;
@@ -41,10 +40,10 @@ Marker.prototype.markTo = function (name, pos) {
 };
 
 Marker.prototype.feedLine = function (line) {
-  if (this.tokens.length > 0) {
+  if (this.text != null) {
     this.tokens.push({type: 0, name: '', text: '\n'});
   }
-  this.txt = line;
+  this.text = line;
   this.pos = 0;
 };
 
