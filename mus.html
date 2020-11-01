@@ -7,6 +7,8 @@
 <script src='js/sound.js'></script>
 <script src='js/mml/MMLNote.js'></script>
 <script src='js/mascii/MasciiParser.js'></script>
+<script src='js/mascii/MasciiPart.js'></script>
+<script src='js/mascii/MasciiNote.js'></script>
 <script src='js/mml/MMLPart.js'></script>
 <script src='js/mml/MMLParser.js'></script>
 <script src='js/mml/MMLPlayer.js'></script>
@@ -113,17 +115,24 @@ function gotoMode(mode){
     if (player) stopMusic();
     divPlayMode.style.display = "";
     
-    dd = new MMLParser(codeIn.value);
-    dd.parse();
     while (codeOut.hasChildNodes()) codeOut.removeChild(codeOut.lastChild);
-    //codeOut.appendChild(dd.scanner.toHTML(dd.parts));
-    player = [];
-    for (var i in dd.parts) {
-      var p = new MMLPlayer(dd.parts[i]);
-      p.view = dd.marker;
-      player.push(p);
+    
+    var lang = format.value;
+    if (lang == 'mml') {
+      dd = new MMLParser(codeIn.value);
+      dd.parse();
+      player = [];
+      for (var i in dd.parts) {
+        var p = new MMLPlayer(dd.parts[i]);
+        p.view = dd.marker;
+        player.push(p);
+      }
     }
-    //togglePlayPause();
+    else if (lang == 'mascii') {
+      dd = new MasciiParser(codeIn.value);
+      dd.parse();
+      player = [];
+    }
     codeOut.appendChild(dd.marker.toHTML());
   }
   if(mode == "edit"){

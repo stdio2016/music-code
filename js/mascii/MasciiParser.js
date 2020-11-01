@@ -24,7 +24,7 @@ MasciiParser.prototype.parse = function () {
     }
     else {
       if (part == this.parts.length) {
-        this.parts.push(new MasciiPart());
+        this.parts.push(new MasciiPart(part));
       }
       this.line = line;
       this.parseLine(this.parts[part]);
@@ -37,15 +37,18 @@ MasciiParser.prototype.parse = function () {
 MasciiParser.prototype.parseLine = function (part) {
   this.pos = 0;
   while (this.pos < this.line.length) {
+    var pos = this.pos;
     do {
       ch = this.line.charAt(this.pos++);
     } while (/\s|_/.test(ch)) ;
+    if (this.pos > pos+1) part.nextChord();
     this.marker.markTo('ws', this.pos-1);
     if (/[A-Ga-g]/.test(ch)) {
-      this.parseNote(ch);
+      part.add(this.parseNote(ch));
       this.count.note++;
     }
     else if (ch == '|') {
+      part.nextBar();
       this.marker.markTo('instruction', this.pos);
       this.count.bar++;
     }
@@ -57,9 +60,11 @@ MasciiParser.prototype.parseLine = function (part) {
       this.marker.markTo('duration', this.pos);
     }
     else if (ch == '.') {
+      var note = new MasciiNote('.', null);
       this.marker.noteStart();
       this.marker.markTo('note', this.pos);
-      this.marker.noteEnd();
+      note.source = this.marker.noteEnd();
+      part.add(note);
       this.count.rest++;
     }
     else if (/[Oo><]/.test(ch)) {
@@ -165,10 +170,11 @@ MasciiParser.prototype.parseBeginEnd = function () {
 
 MasciiParser.prototype.parseNote = function (pitch) {
   this.marker.noteStart();
-  this.parseAccidental();
+  var accid = this.parseAccidental();
+  var note = new MasciiNote(pitch, accid);
   // parse chord name
   var line = this.line;
-  var chord = null;
+  var chord = '';
   var nameTest = line.substring(this.pos, this.pos+4).toLowerCase();
   if ('hdim' == nameTest) {
     chord = nameTest;
@@ -187,6 +193,7 @@ MasciiParser.prototype.parseNote = function (pitch) {
       }
     }
   }
+  note.chord = chord;
   // parse figure
   while (this.pos < line.length) {
     var ch = line.charCodeAt(this.pos++);
@@ -199,7 +206,8 @@ MasciiParser.prototype.parseNote = function (pitch) {
         fig = ch2.charCodeAt(0) - 38;
         this.pos++;
       }
-      this.parseAccidental();
+      var figaccid = this.parseAccidental();
+      note.figures.push([fig, figaccid]);
     }
     else { this.pos--; break; }
   }
@@ -209,21 +217,27 @@ MasciiParser.prototype.parseNote = function (pitch) {
     var i = this.pos;
     this.marker.markTo('note', i);
     var ch = line.charAt(i);
+    var octave = '';
     while (/[0-9<>Oo]/.test(ch)) {
+      octave += ch;
       i++;
       ch = line.charAt(i);
     }
     if (/[A-Ga-g]/.test(ch)) {
+      note.bassOctave = octave;
+      note.bass = ch;
       this.marker.markTo('octave', i);
       this.pos = i+1;
-      this.parseAccidental();
+      note.bassAccid = this.parseAccidental();
+    }
+    else {
+      note.bassOctave = '';
+      note.bass = pitch;
+      note.bassAccid = null;
     }
   }
-  this.parseBeginEnd();
+  note.beginEnd = this.parseBeginEnd();
   this.marker.markTo('note', this.pos);
-  this.marker.noteEnd();
+  note.source = this.marker.noteEnd();
+  return note;
 };
-
-function MasciiPart() {
-  this.a = [];
-}

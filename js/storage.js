@@ -62,7 +62,9 @@ function changeSong(){
     code = oldSongs[name.substr(1)];
   }
   else if (name.charAt(0) == 'd'){
-    code = songs[name.substr(1)].code;
+    var cp = songs[name.substr(1)];
+    code = cp.code;
+    document.getElementById('format').value = cp.lang;
   }
   else if (name == 'perma'){
     var cp = decodePermalink();
