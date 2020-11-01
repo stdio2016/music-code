@@ -98,7 +98,10 @@ function save(){
       opt.selected = true;
     }
     songSelect.value = 'd' + newName;
-    songs[newName] = {lang: 'mml', code: document.getElementById('codeIn').value};
+    songs[newName] = {
+      lang: document.getElementById('format').value,
+      code: document.getElementById('codeIn').value
+    };
     localStorage.setItem('musicCode_SongList', JSON.stringify(songs));
     elt.focus();
   }
@@ -148,7 +151,8 @@ function encodePermalink(name){
       var href = location.href;
       var hashpos = href.indexOf("#");
       var href = hashpos == -1 ? href : href.substr(0, hashpos);
-      location.href=href+'#code='+code;
+      var lang = document.getElementById('format').value;
+      location.href=href+'#lang='+lang+'&code='+code;
       //location.reload();
     })();
   //,500);
