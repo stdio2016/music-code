@@ -44,7 +44,7 @@ MasciiParser.prototype.parse = function () {
     // free formed music
     this.parts.forEach(function (part) {
       if (part.measures.length > 0) {
-        var ctx = {rhythm: [3,1], reverseRhythm: [1,3]};
+        var ctx = new MasciiContext();
         var t = 0;
         part.measures[0].nodes.forEach(function (node) {
           if (node.isBeat()) {

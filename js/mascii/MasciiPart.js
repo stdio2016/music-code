@@ -58,7 +58,7 @@ MasciiPart.prototype.removeEmptyBeat = function () {
 };
 
 MasciiPart.prototype.propagateTiming = function () {
-  var ctx = {rhythm: [3,1], reverseRhythm: [1,3]};
+  var ctx = new MasciiContext();
   var i = 0;
   this.measures.forEach(function (m) {
     if (!m.isEmpty()) {

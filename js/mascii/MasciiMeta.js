@@ -41,7 +41,14 @@ MasciiMeta.prototype.propagateTiming = function (ctx, start, len) {
 };
 
 MasciiMeta.prototype.addEvents = function (ctx) {
-  ;
+  for (var name in this.meta) {
+    var value = this.meta[name];
+    switch (name) {
+      case 'key':
+        ctx.setKey(value);
+        break;
+    }
+  }
 };
 
 function MasciiOctave(str) {
@@ -65,5 +72,5 @@ MasciiOctave.prototype.propagateTiming = function (ctx, start, len) {
 };
 
 MasciiOctave.prototype.addEvents = function (ctx) {
-  ;
+  ctx.setOctave(this.str);
 };

@@ -10,6 +10,8 @@
 <script src='js/mascii/MasciiPart.js'></script>
 <script src='js/mascii/MasciiNote.js'></script>
 <script src='js/mascii/MasciiMeta.js'></script>
+<script src='js/mascii/MasciiContext.js'></script>
+<script src='js/mascii/MasciiPlayer.js'></script>
 <script src='js/mml/MMLPart.js'></script>
 <script src='js/mml/MMLParser.js'></script>
 <script src='js/mml/MMLPlayer.js'></script>
@@ -132,7 +134,11 @@ function gotoMode(mode){
     else if (lang == 'mascii') {
       dd = new MasciiParser(codeIn.value);
       dd.parse();
-      player = [];
+      player = [new MasciiPlayer()];
+      player[0].view = dd.marker;
+      for (var i in dd.parts) {
+        player[0].addPart(dd.parts[i]);
+      }
     }
     codeOut.appendChild(dd.marker.toHTML());
   }

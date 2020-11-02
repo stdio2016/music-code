@@ -53,10 +53,12 @@ MasciiNote.prototype.propagateTiming = function (ctx, start, len) {
 MasciiNote.prototype.addEvents = function (ctx) {
   var pitch = '.';
   if (/[A-Ga-g]/.test(this.pitch)) {
-    pitch = [0,9,11,1,2,4,6,7][this.pitch.charCodeAt(0) & 15];
-    pitch += 48;
+    var ch = (this.pitch.charCodeAt(0) & 15) - 1;
+    pitch = [9,11,0,2,4,5,7][ch];
+    pitch += ctx.octave * 12;
     if (this.pitch >= 'a') pitch += 12;
     if (this.accidental) pitch += this.accidental;
+    else pitch += ctx.keyTable[ch];
   }
   ctx.addNote(this.source, this.startTime, this.duration, pitch);
 };
