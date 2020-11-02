@@ -57,7 +57,7 @@ MasciiNote.prototype.addEvents = function (ctx) {
     pitch = [9,11,0,2,4,5,7][ch];
     pitch += ctx.octave * 12;
     if (this.pitch >= 'a') pitch += 12;
-    if (this.accidental) {
+    if (this.accidental != null) {
       pitch += this.accidental;
       ctx.accidTable[ch] = this.accidental;
     }
