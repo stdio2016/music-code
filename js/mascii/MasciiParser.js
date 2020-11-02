@@ -32,6 +32,28 @@ MasciiParser.prototype.parse = function () {
       part += 1;
     }
   }
+  this.parts.forEach(function (part) {
+    part.removeEmptyBeat();
+  });
+  if (this.count.bar) {
+    this.parts.forEach(function (part) {
+      part.propagateTiming();
+    });
+  }
+  else {
+    this.parts.forEach(function (part) {
+      if (part.measures.length > 0) {
+        var ctx = {rhythm: [3,1], reverseRhythm: [1,3]};
+        var t = 0;
+        part.measures[0].nodes.forEach(function (node) {
+          if (node.isBeat()) {
+            node.propagateTiming(ctx, t, 1);
+          }
+          t += 1;
+        });
+      }
+    });
+  }
 };
 
 MasciiParser.prototype.parseLine = function (part) {
@@ -48,16 +70,18 @@ MasciiParser.prototype.parseLine = function (part) {
       this.count.note++;
     }
     else if (ch == '|') {
-      part.nextBar();
-      this.marker.markTo('instruction', this.pos);
+      var yes = part.nextBar();
+      this.marker.markTo(yes ? 'instruction' : 'error', this.pos);
       this.count.bar++;
     }
     else if (ch == '(') {
       this.marker.markTo('duration', this.pos);
+      part.enterGroup(new MasciiGroup());
       this.count.even++;
     }
     else if (ch == ')') {
-      this.marker.markTo('duration', this.pos);
+      var yes = part.leaveGroup(')');
+      this.marker.markTo(yes ? 'duration' : 'error', this.pos);
     }
     else if (ch == '.') {
       var note = new MasciiNote('.', null);
@@ -67,35 +91,38 @@ MasciiParser.prototype.parseLine = function (part) {
       part.add(note);
       this.count.rest++;
     }
-    else if (/[Oo><]/.test(ch)) {
+    else if (/[Oo><0-9]/.test(ch)) {
       this.marker.markTo('octave', this.pos);
-      this.count.octaveShift++;
+      part.add(new MasciiOctave(ch));
+      this.count.octave++;
     }
     else if (ch == '*') {
+      var note = new MasciiNote('', null);
+      note.beginEnd = '*';
       this.marker.noteStart();
       this.marker.markTo('note', this.pos);
-      this.marker.noteEnd();
+      note.source = this.marker.noteEnd();
+      part.add(note);
       this.count.endAll++;
     }
     else if (ch == '[') {
       this.marker.markTo('duration', this.pos);
+      part.enterGroup(new MasciiDottedGroup(false));
       this.count.dotted++;
     }
     else if (ch == ']') {
-      this.marker.markTo('duration', this.pos);
-    }
-    else if (/[0-9]/.test(ch)) {
-      this.marker.markTo('octave', this.pos);
-      this.count.octave++;
+      var yes = part.leaveGroup(']');
+      this.marker.markTo(yes ? 'duration' : 'error', this.pos);
     }
     else if (ch == '"') {
-      this.parseMeta();
+      part.add(this.parseMeta());
       this.count.meta++;
     }
     else if (ch == '~') {
       if (this.line.charAt(this.pos) == '[') {
         this.pos++;
         this.marker.markTo('duration', this.pos);
+        part.enterGroup(new MasciiDottedGroup(true));
         this.count.reverseDotted++;
       }
       else {
@@ -103,11 +130,17 @@ MasciiParser.prototype.parseLine = function (part) {
       }
     }
     else if (ch == 'x' || ch == 'X') {
+      var note = new MasciiNote('x', null);
       this.marker.noteStart();
-      this.parseBeginEnd();
+      note.beginEnd = this.parseBeginEnd();
       this.marker.markTo('note', this.pos);
-      this.marker.noteEnd();
+      note.source = this.marker.noteEnd();
+      part.add(note);
       this.repeat++;
+    }
+    else if (ch == '#') {
+      this.marker.markTo('comment', this.line.length);
+      this.pos = this.line.length;
     }
     else {
       this.marker.markTo('error', this.pos);
@@ -143,7 +176,7 @@ MasciiParser.prototype.parseMeta = function () {
   }
   //console.log(meta);
   this.marker.markTo('instruction', this.pos);
-  return meta;
+  return new MasciiMeta(meta);
 };
 
 MasciiParser.prototype.parseAccidental = function () {
