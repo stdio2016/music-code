@@ -71,6 +71,7 @@ MasciiPart.prototype.propagateTiming = function () {
 MasciiPart.prototype.addEvents = function (ctx) {
   this.measures.forEach(function (m) {
     m.addEvents(ctx);
+    ctx.resetAccidental();
   });
 };
 

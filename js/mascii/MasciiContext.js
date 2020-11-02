@@ -3,6 +3,7 @@ function MasciiContext() {
   this.rhythm = [3, 1];
   this.reverseRhythm = [1, 3];
   this.keyTable = MasciiContext.KEY_TABLE[2].slice();
+  this.accidTable = this.keyTable.slice();
 }
 MasciiContext.KEY_TABLE = [
   //       pitch
@@ -43,5 +44,12 @@ MasciiContext.prototype.setKey = function (keyname) {
   this.keyTable = MasciiContext.KEY_TABLE[n].slice();
   for (var i = 0; i < 7; i++) {
     this.keyTable[i] += acc;
+  }
+  this.accidTable = this.keyTable.slice();
+};
+
+MasciiContext.prototype.resetAccidental = function () {
+  for (var i = 0; i < 7; i++) {
+    this.accidTable[i] = this.keyTable[i];
   }
 };
