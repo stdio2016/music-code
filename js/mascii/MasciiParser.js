@@ -48,9 +48,9 @@ MasciiParser.prototype.parse = function () {
         var t = 0;
         part.measures[0].nodes.forEach(function (node) {
           if (node.isBeat()) {
-            node.propagateTiming(ctx, t, 1);
+            node.propagateTiming(ctx, t, 0.25);
+            t += 1;
           }
-          t += 1;
         });
       }
     });

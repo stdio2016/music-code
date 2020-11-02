@@ -59,8 +59,18 @@ MasciiPart.prototype.removeEmptyBeat = function () {
 
 MasciiPart.prototype.propagateTiming = function () {
   var ctx = {rhythm: [3,1], reverseRhythm: [1,3]};
-  this.measures.forEach(function (m, i) {
-    m.propagateTiming(ctx, i, 1.0);
+  var i = 0;
+  this.measures.forEach(function (m) {
+    if (!m.isEmpty()) {
+      m.propagateTiming(ctx, i, 1.0);
+      i += 1.0;
+    }
+  });
+};
+
+MasciiPart.prototype.addEvents = function (ctx) {
+  this.measures.forEach(function (m) {
+    m.addEvents(ctx);
   });
 };
 
@@ -118,6 +128,19 @@ MasciiGroup.prototype.propagateTiming = function (ctx, start, len) {
       }
     });
   }
+};
+
+MasciiGroup.prototype.isEmpty = function () {
+  for (var i = 0; i < this.nodes.length; i++) {
+    if (this.nodes[i].isBeat()) return false;
+  }
+  return true;
+};
+
+MasciiGroup.prototype.addEvents = function (ctx) {
+  this.nodes.forEach(function (m) {
+    m.addEvents(ctx);
+  });
 };
 
 function MasciiDottedGroup(reversed) {
@@ -193,5 +216,11 @@ MasciiChord.prototype.removeEmptyBeat = function () {
 MasciiChord.prototype.propagateTiming = function (ctx, start, len) {
   this.nodes.forEach(function (node) {
     node.propagateTiming(ctx, start, len);
+  });
+};
+
+MasciiChord.prototype.addEvents = function (ctx) {
+  this.nodes.forEach(function (m) {
+    m.addEvents(ctx);
   });
 };

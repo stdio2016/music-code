@@ -40,9 +40,12 @@ MasciiMeta.prototype.propagateTiming = function (ctx, start, len) {
   }
 };
 
+MasciiMeta.prototype.addEvents = function (ctx) {
+  ;
+};
+
 function MasciiOctave(str) {
   this.str = str;
-  this.beat = false;
 }
 
 MasciiOctave.prototype.toString = function () {
@@ -58,5 +61,9 @@ MasciiOctave.prototype.removeEmptyBeat = function () {
 };
 
 MasciiOctave.prototype.propagateTiming = function (ctx, start, len) {
+  ;
+};
+
+MasciiOctave.prototype.addEvents = function (ctx) {
   ;
 };

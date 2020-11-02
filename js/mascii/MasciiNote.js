@@ -10,7 +10,7 @@ function MasciiNote(pitch, accidental) {
   this.beginEnd = '';
   this.beat = true;
   this.startTime = 0;
-  this.endTime = 0;
+  this.duration = 0;
 }
 
 MasciiNote.prototype.accidToString = function (accid) {
@@ -47,5 +47,16 @@ MasciiNote.prototype.removeEmptyBeat = function () {
 
 MasciiNote.prototype.propagateTiming = function (ctx, start, len) {
   this.startTime = start;
-  this.endTime = start + len;
+  this.duration = len;
+};
+
+MasciiNote.prototype.addEvents = function (ctx) {
+  var pitch = '.';
+  if (/[A-Ga-g]/.test(this.pitch)) {
+    pitch = [0,9,11,1,2,4,6,7][this.pitch.charCodeAt(0) & 15];
+    pitch += 48;
+    if (this.pitch >= 'a') pitch += 12;
+    if (this.accidental) pitch += this.accidental;
+  }
+  ctx.addNote(this.source, this.startTime, this.duration, pitch);
 };
