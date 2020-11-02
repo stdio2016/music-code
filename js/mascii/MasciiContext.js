@@ -4,6 +4,9 @@ function MasciiContext() {
   this.reverseRhythm = [1, 3];
   this.keyTable = MasciiContext.KEY_TABLE[2].slice();
   this.accidTable = this.keyTable.slice();
+  this.measureNum = 0;
+  this.tempos = [];
+  this.timeSigs = [];
 }
 MasciiContext.KEY_TABLE = [
   //       pitch
@@ -52,4 +55,23 @@ MasciiContext.prototype.resetAccidental = function () {
   for (var i = 0; i < 7; i++) {
     this.accidTable[i] = this.keyTable[i];
   }
+};
+
+MasciiContext.prototype.addTimeSig = function (str) {
+  var frac = str.split('/');
+  if (frac.length != 2) {
+    return;
+  }
+  var numer = parseInt(frac[0], 10);
+  var denom = parseInt(frac[1], 10);
+  if (numer > 0 && denom > 0) {
+    this.timeSigs.push({time: this.measureNum, numer: numer, denom: denom});
+  }
+};
+
+MasciiContext.prototype.addTempo = function (time, str) {
+  var bpm = parseInt(str);
+  if (bpm != bpm) return ;
+  bpm = Math.min(Math.max(bpm, 20), 300);
+  this.tempos.push({time: time, bpm: bpm});
 };

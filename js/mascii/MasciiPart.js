@@ -61,9 +61,10 @@ MasciiPart.prototype.propagateTiming = function () {
   var ctx = new MasciiContext();
   var i = 0;
   this.measures.forEach(function (m) {
+    m.propagateTiming(ctx, i, 1.0);
     if (!m.isEmpty()) {
-      m.propagateTiming(ctx, i, 1.0);
       i += 1.0;
+      ctx.measureNum += 1;
     }
   });
 };
@@ -122,8 +123,8 @@ MasciiGroup.prototype.propagateTiming = function (ctx, start, len) {
     var i = 0;
     var slice = len / n;
     this.nodes.forEach(function (node) {
+      node.propagateTiming(ctx, start, slice);
       if (node.isBeat()) {
-        node.propagateTiming(ctx, start, slice);
         i += 1;
         start += slice;
       }
@@ -184,7 +185,9 @@ MasciiDottedGroup.prototype.propagateTiming = function (ctx, start, len) {
         else {
           myslice = slice;
         }
-        node.propagateTiming(ctx, start, myslice);
+      }
+      node.propagateTiming(ctx, start, myslice);
+      if (node.isBeat()) {
         start += myslice;
         i += 1;
       }

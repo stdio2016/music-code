@@ -1,5 +1,6 @@
 function MasciiMeta(meta) {
   this.meta = meta;
+  this.time = 0;
 }
 
 MasciiMeta.prototype.toString = function () {
@@ -38,6 +39,7 @@ MasciiMeta.prototype.propagateTiming = function (ctx, start, len) {
     var tm = this.parseDottedTiming(this.meta['{}']);
     if (tm) ctx.reverseRhythm = tm;
   }
+  this.time = start;
 };
 
 MasciiMeta.prototype.addEvents = function (ctx) {
@@ -46,6 +48,12 @@ MasciiMeta.prototype.addEvents = function (ctx) {
     switch (name) {
       case 'key':
         ctx.setKey(value);
+        break;
+      case 'time':
+        ctx.addTimeSig(value);
+        break;
+      case 'tempo':
+        ctx.addTempo(this.time, value);
         break;
     }
   }

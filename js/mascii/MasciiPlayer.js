@@ -14,16 +14,18 @@ function MasciiPlayer() {
   this.showTime = 0;
   this.showId = 0;
   this.showingNotes = [];
+  this.tempos = [];
+  this.timeSigs = [];
 }
 
 MasciiPlayer.prototype.addPart = function (part) {
   var mydu = this.duration;
   var ctx = new MasciiContext();
+  ctx.tempos = this.tempos;
+  ctx.timeSigs = this.timeSigs;
   ctx.seq = this.notes,
   ctx.addNote = function (src, start, du, pitch) {
-      start *= 240/80;
-      du *= 240/80;
-      this.seq.push({volume: 1, pitch: pitch, source: src, startTime: start, endTime: start + du});
+      this.seq.push({volume: 1, pitch: pitch, source: src, t0: start, t1: start + du});
       if (start + du > mydu) mydu = start + du;
   };
   part.addEvents(ctx);
@@ -31,14 +33,71 @@ MasciiPlayer.prototype.addPart = function (part) {
   this.sorted = false;
 };
 
+MasciiPlayer.prototype.fixTempo = function () {
+  this.tempos.unshift({time: 0, bpm: 120});
+  this.timeSigs.sort(function (a, b) {
+    if (a.time < b.time) return -1;
+    if (a.time > b.time) return 1;
+    return 0;
+  });
+  this.tempos.sort(function (a, b) {
+    if (a.time < b.time) return -1;
+    if (a.time > b.time) return 1;
+    return 0;
+  });
+  var i = 0, j = 0;
+  var timeSig = 4/4;
+  var bpm = 120;
+  var sumTime = 0;
+  var pastTime = 0;
+  var tempo = [];
+  while (j != this.timeSigs.length || i != this.tempos.length) {
+    if (j == this.timeSigs.length || this.timeSigs[j].time > this.tempos[i].time) {
+      var rate = timeSig * 4 * 60 / bpm;
+      sumTime += rate * (this.tempos[i].time - pastTime);
+      bpm = this.tempos[i].bpm;
+      rate = timeSig * 4 * 60 / bpm;
+      pastTime = this.tempos[i].time;
+      tempo.push({position: pastTime, rate: rate, time: sumTime});
+      i++;
+    }
+    else {
+      var rate = timeSig * 4 * 60 / bpm;
+      sumTime += rate * (this.timeSigs[j].time - pastTime);
+      timeSig = this.timeSigs[j].numer / this.timeSigs[j].denom;
+      rate = timeSig * 4 * 60 / bpm;
+      pastTime = this.timeSigs[j].time;
+      tempo.push({position: pastTime, rate: rate, time: sumTime});
+      j++;
+    }
+  }
+  console.log(tempo);
+  var used = 0;
+  var du = 0;
+  this.notes.forEach(function (n) {
+    while (used+1 < tempo.length && tempo[used+1].position < n.t0) {
+      used++;
+    }
+    n.startTime = (n.t0 - tempo[used].position) * tempo[used].rate + tempo[used].time;
+    var j = used;
+    while (j+1 < tempo.length && tempo[j+1].position < n.t1) {
+      j++;
+    }
+    n.endTime = (n.t1 - tempo[j].position) * tempo[j].rate + tempo[j].time;
+    if (n.endTime > du) du = n.endTime;
+  });
+  this.duration = du;
+};
+
 MasciiPlayer.prototype.play = function () {
   if (!this.sorted) {
     this.sorted = true;
     this.notes.sort(function (a, b) {
-      if (a.startTime < b.startTime) return -1;
-      if (a.startTime > b.startTime) return 1;
+      if (a.t0 < b.t0) return -1;
+      if (a.t0 > b.t0) return 1;
       return 0;
     });
+    this.fixTempo();
   }
   this.showTime = this.playTime;
   this.startTime = actx.currentTime - this.playTime;
