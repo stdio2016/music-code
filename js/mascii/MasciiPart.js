@@ -40,7 +40,8 @@ MasciiPart.prototype.leaveGroup = function (ch) {
   if (this.stack.length == 1) return false;
   var last = this.stack.pop();
   var yes = last.endChar() == ch;
-  this.chord = this.stack[this.stack.length-1];
+  var top = this.stack[this.stack.length-1];
+  this.chord = top.nodes[top.nodes.length-1];
   return yes;
 };
 
