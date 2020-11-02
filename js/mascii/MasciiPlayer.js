@@ -25,7 +25,7 @@ MasciiPlayer.prototype.addPart = function (part) {
   ctx.timeSigs = this.timeSigs;
   ctx.seq = this.notes,
   ctx.addNote = function (src, start, du, pitch) {
-      this.seq.push({volume: 1, pitch: pitch, source: src, t0: start, t1: start + du});
+      this.seq.push({volume: 0.5, pitch: pitch, source: src, t0: start, t1: start + du});
       if (start + du > mydu) mydu = start + du;
   };
   part.addEvents(ctx);

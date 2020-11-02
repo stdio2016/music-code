@@ -17,6 +17,7 @@ MasciiPart.prototype.nextBar = function () {
   this.chord = new MasciiChord();
   m.nodes.push(this.chord);
   this.measures.push(m);
+  this.stack.length = 1;
   this.stack[0] = m;
   return yes;
 };
