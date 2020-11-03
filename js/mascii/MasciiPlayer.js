@@ -52,7 +52,7 @@ MasciiPlayer.prototype.fixTempo = function () {
   var pastTime = 0;
   var tempo = [];
   while (j != this.timeSigs.length || i != this.tempos.length) {
-    if (j == this.timeSigs.length || this.timeSigs[j].time > this.tempos[i].time) {
+    if (j == this.timeSigs.length || i != this.tempos.length && this.timeSigs[j].time > this.tempos[i].time) {
       var rate = timeSig * 4 * 60 / bpm;
       sumTime += rate * (this.tempos[i].time - pastTime);
       bpm = this.tempos[i].bpm;

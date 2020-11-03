@@ -74,6 +74,9 @@ MasciiPart.prototype.addEvents = function (ctx) {
   this.measures.forEach(function (m) {
     m.addEvents(ctx);
     ctx.resetAccidental();
+    if (!m.isEmpty()) {
+      ctx.measureNum += 1;
+    }
   });
 };
 
