@@ -26,6 +26,7 @@ function MMLNote(pitch, duration, dots) {
   this.dots = dots; // dot count, can be either 0 or 1
   this.startTime = 0;
   this.endTime = 0;
+  this.feel = 1;
 }
 
 MMLNote.MAX_DURATION = 128;

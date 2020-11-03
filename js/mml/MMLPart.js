@@ -12,6 +12,7 @@ function MMLPart(partId) {
   this.transpose = 0; // current transpose in semitones
   this.pos = 0; // current position. Unit is whole notes
   this.chordMode = false; // next note is in the chord
+  this.feel = 1;
   this.tieMode = false;
   this.savedOctave = 4;
 }
@@ -115,9 +116,11 @@ MMLPart.prototype.addNote = function (note) {
   }
   else {
     note.startTime = part.pos;
-    part.pos += 1 / note.duration * (2 - Math.pow(0.5, note.dots));
-    note.endTime = part.pos;
+    var du = 1 / note.duration * (2 - Math.pow(0.5, note.dots));
+    note.endTime = part.pos + du * part.feel;
+    part.pos += du;
   }
+  note.feel = part.feel;
   part.tieMode = false;
   part.notes.push(note);
 };

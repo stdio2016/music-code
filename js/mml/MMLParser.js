@@ -162,7 +162,23 @@ MMLParser.prototype.readMusicFeel = function () {
   }
   else {
     this.pos = pos;
-    this.markAs('error');
+    var ch = this.next().toUpperCase();
+    if (ch == 'L') {
+      this.markAs('decoration');
+      this.current.feel = 1;
+    }
+    else if (ch == 'N') {
+      this.markAs('decoration');
+      this.current.feel = 0.875;
+    }
+    else if (ch == 'S') {
+      this.markAs('decoration');
+      this.current.feel = 0.75;
+    }
+    else {
+      this.pos = pos;
+      this.markAs('error');
+    }
   }
 };
 
