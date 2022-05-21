@@ -205,3 +205,30 @@ MMLPlayer.prototype.hideNote = function (n) {
   }
   this.view.notes[n.source].span.classList.remove('playing');
 };
+
+MMLPlayer.prototype.seek = function (nsec) {
+  var playing = this.playId;
+  // stop current playing notes
+  this.pause();
+  this.stopAnimation();
+
+  // jump to new location
+  this.playTime = nsec;
+  this.showTime = this.playTime;
+
+  this.playPos = 0;
+  this.showPos = 0;
+  if (playing) {
+    // continue playing
+    this.play();
+  }
+};
+
+MMLPlayer.prototype.getCurrentPos = function () {
+  if (this.playId) {
+    return actx.currentTime - this.startTime;
+  }
+  else {
+    return this.playTime;
+  }
+};

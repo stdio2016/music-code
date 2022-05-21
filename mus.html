@@ -62,7 +62,7 @@
     <label><input type='checkbox' id='chkLoopMusic'>Loop Music</label>
   </p>
   <p>
-    <input type='range' min='0' max='1' value='0' step='0.1' oninput='console.log("changing")' onmouseup='console.log(this.value)'><span>0:00/0:00</span>
+    <input type='range' min='0' max='1' value='0' step='0.1' id=timeScroll oninput='seekToPos(event.target.value)' onmouseup='console.log(this.value)'><span id='timeSpan'>0:00/0:00</span>
   </p>
   <p>Music format: None</p>
   <p>
@@ -172,6 +172,7 @@ function togglePlayPause(){
       isPlaying = 0;
       for (var i = 0; i < player.length; i++) {
         player[i].onended = function () {
+          console.log('onended');
           isPlaying--;
           this.finished = true;
           if (isPlaying <= 0) {
@@ -208,6 +209,56 @@ addEventListener('load',function(){
   changeSong();
   decodePermalink();
 });
+
+function seekToPos(value) {
+  value = parseFloat(value);
+  var isPlayingBool = isPlaying > 0;
+  for (var i = 0; i < player.length; i++) {
+    player[i].onended = null;
+    player[i].stop();
+    player[i].onended = function () {
+      console.log('onended');
+      isPlaying--;
+      this.finished = true;
+      if (isPlaying <= 0) {
+        stopMusic();
+        if (chkLoopMusic.checked) {
+          togglePlayPause();
+        }
+        else {
+          btnPlayPause.value = "Play";
+        }
+      }
+    };
+    player[i].seek(value);
+    if (isPlayingBool) player[i].play();
+  }
+  if (isPlayingBool) {
+    isPlaying = player.length;
+  }
+}
+
+function toTimeString(secs) {
+  var min = Math.floor(secs / 60);
+  var sec = '0' + Math.floor(secs % 60).toFixed(0);
+  return min + ':' + sec.substring(sec.length - 2);
+}
+
+setInterval(function () {
+  var timeScroll = document.getElementById('timeScroll');
+  var timeSpan = document.getElementById('timeSpan');
+  var playTime = 0;
+  var duration = 0;
+  if (player != null && player.length > 0) {
+    for (var i = 0; i < player.length; i++) {
+      playTime = Math.max(player[i].getCurrentPos(), playTime);
+      duration = Math.max(player[i].duration, duration);
+    }
+    timeScroll.setAttribute('max', duration);
+    timeScroll.value = playTime;
+    timeSpan.textContent = toTimeString(playTime) + '/' + toTimeString(duration);
+  }
+}, 100);
 </script>
 </body>
 </html>
