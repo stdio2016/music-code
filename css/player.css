@@ -12,6 +12,7 @@ input[type="range"] {
 	overflow-wrap: break-word;
 }
 
+/* Safari 15/iOS 15 workaround */
 #codeOut span {
   display: inline-block;
 }
