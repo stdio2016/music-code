@@ -41,7 +41,7 @@
       <option value="mascii">Mascii</option>
     </select>
   </p>
-  <textarea id="codeIn" style="width: 15em; height: 15em;"></textarea>
+  <textarea id="codeIn" style="width: 15em; height: 15em;" oninput="event.target.dirty=true"></textarea>
   <p>
     <input type='button' value='Play' onclick='gotoMode("play")'>
     <input type='button' value='Save' onclick='save()'>
@@ -259,6 +259,19 @@ setInterval(function () {
     timeSpan.textContent = toTimeString(playTime) + '/' + toTimeString(duration);
   }
 }, 100);
+
+onbeforeunload = function () {
+  if (codeIn.dirty) {
+    return 'You have unsaved changes. Really want to quit?';
+  }
+  return null;
+};
+
+onfocus = function () {
+  if (actx.state === 'suspended') {
+    actx.resume();
+  }
+};
 </script>
 </body>
 </html>
